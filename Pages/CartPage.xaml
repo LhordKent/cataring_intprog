@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.CartPage"
+             Shell.NavBarIsVisible="False"
+             Title="Shopping Cart"
+             BackgroundColor="#121212">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <!-- Mock Phone Frame -->
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="#F8F8F8"
+               BorderColor="Black">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollView Grid.Row="0">
+                    <VerticalStackLayout Padding="15" Spacing="10">
+                        <Label x:Name="EmptyCartLabel" 
+                               Text="Your cart is empty" 
+                               HorizontalOptions="Center" 
+                               Margin="0,50,0,0" 
+                               TextColor="Gray"
+                               IsVisible="False"/>
+
+                        <CollectionView x:Name="CartCollection">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="White" Padding="10" HasShadow="False" CornerRadius="10" Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="80, *, Auto" ColumnSpacing="10">
+                                            <Image Grid.Column="0" Source="{Binding ImageUrl}" HeightRequest="80" WidthRequest="80" Aspect="AspectFill" BackgroundColor="#EEEEEE"/>
+                                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                                <Label Text="{Binding Title}" TextColor="Black" FontAttributes="Bold" MaxLines="1"/>
+                                                <Label Text="{Binding Price, StringFormat='${0:F2}'}" TextColor="{StaticResource Primary}" FontAttributes="Bold" Margin="0,5,0,0"/>
+                                            </VerticalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="10">
+                                                <Button Text="-" WidthRequest="30" HeightRequest="30" Padding="0" BackgroundColor="#F0F0F0" TextColor="Black" Clicked="OnDecreaseQuantityClicked" CommandParameter="{Binding .}"/>
+                                                <Label Text="{Binding Quantity}" TextColor="Black" VerticalOptions="Center"/>
+                                                <Button Text="+" WidthRequest="30" HeightRequest="30" Padding="0" BackgroundColor="#F0F0F0" TextColor="Black" Clicked="OnIncreaseQuantityClicked" CommandParameter="{Binding .}"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Bottom Checkout Bar -->
+                <Frame x:Name="CheckoutBar" Grid.Row="1" BackgroundColor="White" Padding="20" HasShadow="True" CornerRadius="0" IsVisible="False">
+                    <VerticalStackLayout Spacing="15">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label x:Name="TotalCountLabel" Grid.Column="0" Text="Total (0 items):" TextColor="Black" FontSize="16"/>
+                            <Label x:Name="TotalPriceLabel" Grid.Column="1" Text="$0.00" TextColor="{StaticResource Primary}" FontSize="20" FontAttributes="Bold"/>
+                        </Grid>
+                        
+                        <Button Text="CHECKOUT"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                HeightRequest="50"
+                                CornerRadius="25"
+                                Clicked="OnCheckoutClicked"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- INTERNAL NAVIGATION BAR -->
+                <Frame Grid.Row="2" BackgroundColor="White" Padding="0" HeightRequest="60" HasShadow="True" BorderColor="#EEEEEE" CornerRadius="0">
+                    <Grid ColumnDefinitions="*, *, *">
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                            <Label Text="🏠" HorizontalOptions="Center" FontSize="20" TextColor="Gray"/>
+                            <Label Text="Home" HorizontalOptions="Center" FontSize="10" TextColor="Gray"/>
+                            <VerticalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnHomeClicked"/>
+                            </VerticalStackLayout.GestureRecognizers>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="🛒" HorizontalOptions="Center" FontSize="20" TextColor="{StaticResource Primary}"/>
+                            <Label Text="Cart" HorizontalOptions="Center" FontSize="10" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="2">
+                            <Label Text="👤" HorizontalOptions="Center" FontSize="20" TextColor="Gray"/>
+                            <Label Text="Profile" HorizontalOptions="Center" FontSize="10" TextColor="Gray"/>
+                            <VerticalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnProfileClicked"/>
+                            </VerticalStackLayout.GestureRecognizers>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

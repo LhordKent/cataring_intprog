@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.SplashScreen"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#121212"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid VerticalOptions="Center" HorizontalOptions="Center">
+        <!-- Mock Phone Frame -->
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="{StaticResource Primary}"
+               BorderColor="Black">
+        
+            <VerticalStackLayout VerticalOptions="Center" Spacing="20">
+                <!-- Placeholder for Logo -->
+                <Frame BackgroundColor="White" 
+                       HeightRequest="120" WidthRequest="120" 
+                       CornerRadius="60" 
+                       HorizontalOptions="Center"
+                       HasShadow="True">
+                    <Label Text="TEMU" 
+                           TextColor="{StaticResource Primary}" 
+                           FontSize="24" 
+                           FontAttributes="Bold" 
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center"/>
+                </Frame>
+                
+                <Label Text="Shop Like a Billionaire"
+                       TextColor="White"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+                
+                <ActivityIndicator IsRunning="True" Color="White" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Frame>
+    </Grid>
+</ContentPage>

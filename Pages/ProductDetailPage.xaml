@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.ProductDetailPage"
+             Shell.NavBarIsVisible="False"
+             Title="Product Details"
+             BackgroundColor="#121212">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <!-- Mock Phone Frame -->
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="White"
+               BorderColor="Black">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top Back Button -->
+                <Grid Grid.Row="0" BackgroundColor="White" Padding="15,10">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="←" FontSize="24" TextColor="Black" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackClicked"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="Product Details" TextColor="Black" FontSize="18" FontAttributes="Bold" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <ScrollView Grid.Row="1">
+                    <VerticalStackLayout Spacing="0">
+                        <!-- Product Image -->
+                        <Image Source="{Binding ImageUrl}" HeightRequest="360" Aspect="AspectFill" BackgroundColor="#EEEEEE"/>
+                        
+                        <VerticalStackLayout Padding="20" Spacing="10">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="{Binding Price, StringFormat='${0:F2}'}" TextColor="{StaticResource Primary}" FontSize="28" FontAttributes="Bold"/>
+                            </HorizontalStackLayout>
+
+                            <Label Text="{Binding Title}"
+                                   TextColor="Black" FontSize="18" FontAttributes="Bold"/>
+                            
+                            <Label Text="{Binding SellerName, StringFormat='Sold by: {0}'}" TextColor="Gray" FontSize="14"/>
+                            
+                            <BoxView HeightRequest="1" Color="#EEEEEE" Margin="0,10"/>
+
+                            <Label Text="Product Description" FontAttributes="Bold" FontSize="16" TextColor="Black"/>
+                            <Label Text="{Binding Description}"
+                                   TextColor="DimGray" FontSize="14" LineHeight="1.2"/>
+
+                            <BoxView HeightRequest="1" Color="#EEEEEE" Margin="0,10"/>
+
+                            <Label Text="Customer Reviews" FontAttributes="Bold" FontSize="16" TextColor="Black"/>
+                            
+                            <CollectionView x:Name="ReviewsCollection">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <VerticalStackLayout Padding="0,10" Spacing="5">
+                                            <HorizontalStackLayout Spacing="10">
+                                                <Label Text="{Binding BuyerName}" TextColor="Black" FontAttributes="Bold" FontSize="14"/>
+                                                <Label Text="{Binding Rating, StringFormat='★ {0}'}" TextColor="Orange" FontSize="14"/>
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding Comment}" TextColor="DimGray" FontSize="14"/>
+                                            <Label Text="{Binding Timestamp, StringFormat='{0:MMM dd, yyyy}'}" TextColor="LightGray" FontSize="10"/>
+                                            <BoxView HeightRequest="1" Color="#F5F5F5" Margin="0,5,0,0"/>
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                            
+                            <Label x:Name="NoReviewsLabel" 
+                                   Text="No reviews yet" 
+                                   TextColor="Gray" 
+                                   FontSize="14" 
+                                   HorizontalOptions="Center" 
+                                   IsVisible="False"
+                                   Margin="0,10"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Bottom Action Bar -->
+                <Grid x:Name="BottomActionBar" Grid.Row="2" BackgroundColor="White" Padding="15" ColumnDefinitions="Auto, *">
+                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Margin="0,0,15,0">
+                        <Label Text="🛒" HorizontalOptions="Center"/>
+                        <Label Text="Cart" FontSize="10" TextColor="Black"/>
+                    </VerticalStackLayout>
+                    
+                    <Button Grid.Column="1"
+                            Text="ADD TO CART"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            CornerRadius="25"
+                            Clicked="OnAddToCartClicked"/>
+                </Grid>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

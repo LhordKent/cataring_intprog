@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.LoginPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#121212"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <!-- Mock Phone Frame -->
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="White"
+               BorderColor="Black">
+            
+            <ScrollView>
+                <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+                    
+                    <Label Text="Hello"
+                           FontSize="32"
+                           FontAttributes="Bold"
+                           TextColor="Black"
+                           HorizontalOptions="Center" 
+                           Margin="0,40,0,0"/>
+                    
+                    <Label Text="Sign in to continue"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"
+                           Margin="0,0,0,20"/>
+
+                    <Entry x:Name="EmailEntry"
+                           Placeholder="Gmail"
+                           Keyboard="Email"
+                           TextColor="Black"
+                           BackgroundColor="#F5F5F5"
+                           HeightRequest="50"/>
+
+                    <Entry x:Name="PasswordEntry"
+                           Placeholder="Password"
+                           IsPassword="True"
+                           TextColor="Black"
+                           BackgroundColor="#F5F5F5"
+                           HeightRequest="50"/>
+
+                    <Button Text="SIGN IN"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            CornerRadius="25"
+                            Clicked="OnLoginClicked"/>
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+                        <Label Text="Don't have an account?" TextColor="Gray"/>
+                        <Label Text="Register" 
+                               TextColor="{StaticResource Primary}" 
+                               FontAttributes="Bold">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRegisterTapped"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+
+                    <Label Text="Forgot Password?"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"
+                           Margin="0,10,0,0">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnForgotPasswordTapped"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Frame>
+    </Grid>
+</ContentPage>

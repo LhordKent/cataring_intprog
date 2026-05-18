@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.AddEditProductPage"
+             Shell.NavBarIsVisible="False"
+             Title="Manage Product"
+             BackgroundColor="#121212">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <!-- Mock Phone Frame -->
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="White"
+               BorderColor="Black">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top Back Button -->
+                <Grid Grid.Row="0" BackgroundColor="White" Padding="15,10">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="←" FontSize="24" TextColor="Black" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackClicked"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label x:Name="PageTitle" Text="Add Product" TextColor="Black" FontSize="18" FontAttributes="Bold" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <ScrollView Grid.Row="1">
+                <VerticalStackLayout Padding="20" Spacing="20">
+                    <Label Text="Product Information" FontSize="20" FontAttributes="Bold" TextColor="Black"/>
+                    
+                    <Frame x:Name="ImageFrame" BackgroundColor="#F5F5F5" HeightRequest="150" HasShadow="False" CornerRadius="10">
+                        <Grid>
+                            <VerticalStackLayout x:Name="UploadPlaceholder" VerticalOptions="Center">
+                                <Label Text="📸" FontSize="40" HorizontalOptions="Center"/>
+                                <Label Text="Upload Product Image" TextColor="Gray" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                            <Image x:Name="ProductImage" Aspect="AspectFill" IsVisible="False"/>
+                        </Grid>
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnUploadImageTapped"/>
+                        </Frame.GestureRecognizers>
+                    </Frame>
+
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Product Name" TextColor="Black" FontSize="14"/>
+                        <Entry x:Name="NameEntry" Placeholder="Enter product name" BackgroundColor="#F5F5F5" HeightRequest="45" TextColor="Black"/>
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Price (₱)" TextColor="Black" FontSize="14"/>
+                            <Entry x:Name="PriceEntry" Placeholder="0.00" Keyboard="Numeric" BackgroundColor="#F5F5F5" HeightRequest="45" TextColor="Black"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                            <Label Text="Stock" TextColor="Black" FontSize="14"/>
+                            <Entry x:Name="StockEntry" Placeholder="0" Keyboard="Numeric" BackgroundColor="#F5F5F5" HeightRequest="45" TextColor="Black"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Category" TextColor="Black" FontSize="14"/>
+                        <Entry x:Name="CategoryEntry" Placeholder="e.g. Electronics" BackgroundColor="#F5F5F5" HeightRequest="45" TextColor="Black"/>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Description" TextColor="Black" FontSize="14"/>
+                        <Editor x:Name="DescriptionEditor" Placeholder="Enter details..." BackgroundColor="#F5F5F5" HeightRequest="100" TextColor="Black"/>
+                    </VerticalStackLayout>
+
+                    <Button x:Name="SubmitButton" Text="ADD PRODUCT" 
+                            BackgroundColor="{StaticResource Primary}" 
+                            TextColor="White" 
+                            FontAttributes="Bold" 
+                            HeightRequest="50" 
+                            CornerRadius="25"
+                            Clicked="OnSaveClicked"/>
+                </VerticalStackLayout>
+            </ScrollView>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

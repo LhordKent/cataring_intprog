@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.ManageProductsPage"
+             Shell.NavBarIsVisible="False"
+             Title="Manage Products"
+             BackgroundColor="#121212">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="#F8F8F8"
+               BorderColor="Black">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" BackgroundColor="White" Padding="15,10">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="←" FontSize="24" TextColor="Black" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackClicked"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="Manage Products" TextColor="Black" FontSize="18" FontAttributes="Bold" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <!-- Product List -->
+                <CollectionView Grid.Row="1" x:Name="ProductsList" SelectionMode="None" Margin="10">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,5" Padding="10" BackgroundColor="White" HasShadow="False" CornerRadius="10" BorderColor="#EEEEEE">
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
+                                    <Image Grid.Column="0" Source="{Binding ImageUrl}" WidthRequest="60" HeightRequest="60" Aspect="AspectFill" VerticalOptions="Center"/>
+                                    
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="Black" LineBreakMode="TailTruncation"/>
+                                        <Label Text="{Binding PriceFormatted}" TextColor="{StaticResource Primary}" FontSize="14"/>
+                                        <Label Text="{Binding Status}" FontSize="12" TextColor="Gray"/>
+                                    </VerticalStackLayout>
+
+                                    <HorizontalStackLayout Grid.Column="2" Spacing="10" VerticalOptions="Center">
+                                        <Label Text="Edit" TextColor="Blue" VerticalOptions="Center">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnEditClicked" CommandParameter="{Binding .}"/>
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                        <Label Text="Delete" TextColor="Red" VerticalOptions="Center">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnDeleteClicked" CommandParameter="{Binding .}"/>
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Padding="50">
+                            <Label Text="No products found." TextColor="Gray" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

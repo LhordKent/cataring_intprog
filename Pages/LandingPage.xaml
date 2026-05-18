@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.LandingPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#121212"
+             Title="Home">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <!-- Mock Phone Frame -->
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="#F8F8F8"
+               BorderColor="Black">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top Navigation Bar -->
+                <Grid Grid.Row="0" BackgroundColor="White" Padding="15,10" ColumnDefinitions="*, Auto">
+                    <Frame Grid.Column="0" 
+                           BackgroundColor="#F0F0F0" 
+                           HasShadow="False" 
+                           CornerRadius="20" 
+                           Padding="15,5" 
+                           HeightRequest="40">
+                        <HorizontalStackLayout Spacing="10">
+                            <Label Text="🔍" VerticalOptions="Center"/>
+                            <Label Text="Search for anything..." TextColor="Gray" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Frame>
+                    
+                    <ImageButton Grid.Column="1"
+                                 HeightRequest="35" WidthRequest="35"
+                                 Margin="10,0,0,0"
+                                 Clicked="OnProfileClicked">
+                        <ImageButton.Source>
+                            <FontImageSource FontFamily="MaterialIcons" Glyph="&#xe853;" Color="{StaticResource Primary}"/>
+                        </ImageButton.Source>
+                    </ImageButton>
+                </Grid>
+
+                <ScrollView Grid.Row="1">
+                    <VerticalStackLayout Spacing="15" Padding="15">
+                        
+
+                        <!-- Product Grid Title -->
+                        <Label Text="Recommended For You" FontAttributes="Bold" FontSize="18" TextColor="Black" Margin="0,10,0,0"/>
+                        
+                        <!-- Dynamic Product Grid Placeholder -->
+                        <Label Text="No products available" 
+                               IsVisible="False"
+                               HorizontalOptions="Center" 
+                               Margin="0,50,0,0" 
+                               TextColor="Gray"/>
+
+                        <CollectionView x:Name="ProductsCollection">
+                            <CollectionView.ItemsLayout>
+                                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="10" VerticalItemSpacing="10"/>
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="White" Padding="0" HasShadow="False" CornerRadius="8">
+                                        <VerticalStackLayout>
+                                            <Image Source="{Binding ImageUrl}" 
+                                                   HeightRequest="120" 
+                                                   Aspect="AspectFill"
+                                                   BackgroundColor="#EEEEEE"/>
+                                            <VerticalStackLayout Padding="10">
+                                                <Label Text="{Binding Title}" TextColor="Black" FontSize="14" MaxLines="2"/>
+                                                <Label Text="{Binding Price, StringFormat='${0:F2}'}" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                                            </VerticalStackLayout>
+                                        </VerticalStackLayout>
+                                        <Frame.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnProductTapped" CommandParameter="{Binding .}"/>
+                                        </Frame.GestureRecognizers>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- INTERNAL NAVIGATION BAR -->
+                <Frame Grid.Row="2" BackgroundColor="White" Padding="0" HeightRequest="60" HasShadow="True" BorderColor="#EEEEEE" CornerRadius="0">
+                    <Grid ColumnDefinitions="*, *, *">
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                            <Label Text="🏠" HorizontalOptions="Center" FontSize="20" TextColor="{StaticResource Primary}"/>
+                            <Label Text="Home" HorizontalOptions="Center" FontSize="10" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="🛒" HorizontalOptions="Center" FontSize="20" TextColor="Gray"/>
+                            <Label Text="Cart" HorizontalOptions="Center" FontSize="10" TextColor="Gray"/>
+                            <VerticalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCartClicked"/>
+                            </VerticalStackLayout.GestureRecognizers>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="2">
+                            <Label Text="👤" HorizontalOptions="Center" FontSize="20" TextColor="Gray"/>
+                            <Label Text="Profile" HorizontalOptions="Center" FontSize="10" TextColor="Gray"/>
+                            <VerticalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnProfileClicked"/>
+                            </VerticalStackLayout.GestureRecognizers>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

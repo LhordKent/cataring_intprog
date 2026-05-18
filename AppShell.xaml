@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Temu_Catarig.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Temu_Catarig"
+    xmlns:pages="clr-namespace:Temu_Catarig.Pages"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
+    Title="Temu Clone">
+
+    <!-- Splash Screen -->
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:SplashScreen}"
+        Route="SplashScreen"
+        Shell.NavBarIsVisible="False" />
+
+    <!-- Auth Flow -->
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:LoginPage}"
+        Route="LoginPage"
+        Shell.NavBarIsVisible="False" />
+
+    <!-- Landing Page (No external TabBar) -->
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:LandingPage}"
+        Route="LandingPage"
+        Shell.NavBarIsVisible="False" />
+
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:AdminDashboardPage}"
+        Route="AdminDashboardPage"
+        Shell.NavBarIsVisible="False" />
+
+</Shell>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Temu_Catarig.Pages.CheckoutPage"
+             Shell.NavBarIsVisible="False"
+             Title="Checkout"
+             BackgroundColor="#121212">
+
+    <Grid HorizontalOptions="Center" VerticalOptions="Center">
+        <Frame WidthRequest="360" 
+               HeightRequest="640" 
+               Padding="0" 
+               CornerRadius="20" 
+               IsClippedToBounds="True" 
+               HasShadow="True" 
+               BackgroundColor="White"
+               BorderColor="Black">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" BackgroundColor="White" Padding="15,10">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="←" FontSize="24" TextColor="Black" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackClicked"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="Checkout" TextColor="Black" FontSize="18" FontAttributes="Bold" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <ScrollView Grid.Row="1">
+                    <VerticalStackLayout Padding="20" Spacing="20">
+                        
+                        <!-- Shipping Information -->
+                        <Label Text="Shipping Information" FontSize="16" FontAttributes="Bold" TextColor="Black"/>
+                        
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Full Name" FontSize="12" TextColor="Gray"/>
+                            <Entry x:Name="NameEntry" Placeholder="Enter your name" TextColor="Black" BackgroundColor="#F5F5F5"/>
+                            
+                            <Label Text="Phone Number" FontSize="12" TextColor="Gray" Margin="0,10,0,0"/>
+                            <Entry x:Name="PhoneEntry" Placeholder="Enter phone number" Keyboard="Telephone" TextColor="Black" BackgroundColor="#F5F5F5"/>
+
+                            <Label Text="Shipping Address" FontSize="12" TextColor="Gray" Margin="0,10,0,0"/>
+                            <Entry x:Name="AddressEntry" Placeholder="Enter shipping address" TextColor="Black" BackgroundColor="#F5F5F5"/>
+                        </VerticalStackLayout>
+
+                        <!-- Payment Method -->
+                        <Label Text="Payment Method" FontSize="16" FontAttributes="Bold" TextColor="Black" Margin="0,10,0,0"/>
+                        
+                        <Frame BackgroundColor="#F5F5F5" Padding="10" HasShadow="False" CornerRadius="8">
+                            <VerticalStackLayout Spacing="10">
+                                <RadioButton x:Name="CodRadio" Content="Cash on Delivery (COD)" IsChecked="True" TextColor="Black"/>
+                                <RadioButton x:Name="GcashRadio" Content="GCash" TextColor="Black"/>
+                                <RadioButton x:Name="CardRadio" Content="Credit/Debit Card" TextColor="Black"/>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- Order Summary -->
+                        <Label Text="Order Summary" FontSize="16" FontAttributes="Bold" TextColor="Black" Margin="0,10,0,0"/>
+                        <Frame BackgroundColor="#FFF8E1" Padding="15" HasShadow="False" CornerRadius="8">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Label Grid.Column="0" Text="Total Amount:" TextColor="Black" FontAttributes="Bold"/>
+                                <Label x:Name="TotalLabel" Grid.Column="1" Text="₱0.00" TextColor="{StaticResource Primary}" FontAttributes="Bold"/>
+                            </Grid>
+                        </Frame>
+
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <!-- Place Order Button -->
+                <Button Grid.Row="2" 
+                        Text="PLACE ORDER" 
+                        BackgroundColor="{StaticResource Primary}" 
+                        TextColor="White" 
+                        FontAttributes="Bold" 
+                        Margin="20" 
+                        HeightRequest="50" 
+                        CornerRadius="25"
+                        Clicked="OnPlaceOrderClicked"/>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>
