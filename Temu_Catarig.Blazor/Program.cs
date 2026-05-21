@@ -17,8 +17,4 @@ builder.Services.AddScoped<FirebaseService>();
 
 var host = builder.Build();
 
-// Initialize auth state
-var authService = host.Services.GetRequiredService<AuthService>();
-await authService.InitializeAsync();
-
 await host.RunAsync();
