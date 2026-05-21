@@ -1,0 +1,96 @@
+@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Sign In | Temu</PageTitle>
+
+<div class="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-sm border border-gray-100">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 italic text-temu-orange">TEMU</h2>
+            <h3 class="mt-2 text-center text-xl font-bold text-gray-700">Sign In</h3>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                New to Temu? 
+                <NavLink href="/register" class="font-medium text-temu-orange hover:underline">Create an account</NavLink>
+            </p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 text-red-700 text-sm">
+                @errorMessage
+            </div>
+        }
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" class="mt-8 space-y-6">
+            <DataAnnotationsValidator />
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                    <InputText id="email" @bind-Value="loginModel.Email" 
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-temu-orange focus:border-temu-orange sm:text-sm" 
+                               placeholder="admin@example.com" />
+                    <ValidationMessage For="@(() => loginModel.Email)" class="text-red-500 text-xs mt-1" />
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <InputText id="password" type="password" @bind-Value="loginModel.Password" 
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-temu-orange focus:border-temu-orange sm:text-sm" 
+                               placeholder="••••••••" />
+                    <ValidationMessage For="@(() => loginModel.Password)" class="text-red-500 text-xs mt-1" />
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" disabled="@isSubmitting"
+                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-full text-white bg-temu-orange hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-temu-orange disabled:opacity-50">
+                    @if (isSubmitting)
+                    {
+                        <svg class="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    }
+                    SIGN IN
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+        isSubmitting = true;
+
+        var result = await AuthService.LoginUser(loginModel.Email, loginModel.Password);
+        
+        if (result.Success)
+        {
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            errorMessage = result.ErrorMessage;
+        }
+
+        isSubmitting = false;
+    }
+
+    public class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+    }
+}
