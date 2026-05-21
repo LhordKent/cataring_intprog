@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Temu_Catarig.Models;
+namespace Temu_Catarig.Blazor.Models;
 
 public class Order
 {
@@ -42,13 +42,13 @@ public class Order
 
     public bool IsFulfillmentActionVisible => Status == "Pending" || Status == "Shipped";
     
-    public Color StatusColor => Status switch
+    public string StatusColorHex => Status switch
     {
-        "Delivered" => Color.FromArgb("#2ECC71"),
-        "Pending" => Color.FromArgb("#FFD700"),
-        "Shipped" => Color.FromArgb("#3498DB"),
-        "Cancelled" => Color.FromArgb("#FF4500"),
-        _ => Color.FromArgb("#808080")
+        "Delivered" => "#2ECC71",
+        "Pending" => "#FFD700",
+        "Shipped" => "#3498DB",
+        "Cancelled" => "#FF4500",
+        _ => "#808080"
     };
 
     public string ItemsSummary => Items.Count > 1 

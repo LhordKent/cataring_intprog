@@ -1,4 +1,4 @@
-namespace Temu_Catarig.Models;
+namespace Temu_Catarig.Blazor.Models;
 
 public class UserProfile
 {
