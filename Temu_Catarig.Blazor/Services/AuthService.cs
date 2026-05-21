@@ -154,6 +154,22 @@ public class AuthService
         }
     }
 
+    public async Task<(bool Success, string ErrorMessage)> ResetPassword(string email)
+    {
+        try
+        {
+            EnsureClientInitialized();
+            if (_authClient == null) return (false, "Authentication client not initialized.");
+
+            await _authClient.ResetEmailPasswordAsync(email);
+            return (true, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            return (false, GetFriendlyErrorMessage(ex.Message));
+        }
+    }
+
     public async Task Logout()
     {
         try
@@ -206,6 +222,8 @@ public class AuthService
             return "Password should be at least 6 characters.";
         if (technicalMessage.Contains("INVALID_EMAIL"))
             return "Please enter a valid email address.";
+        if (technicalMessage.Contains("OPERATION_NOT_ALLOWED"))
+            return "Email/Password authentication is not enabled in Firebase.";
         return technicalMessage;
     }
 }
