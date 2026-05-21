@@ -3,20 +3,38 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
-<PageTitle>Admin Dashboard | Temu</PageTitle>
+<PageTitle>@(AuthService.IsAdmin ? "Admin Dashboard" : "Manage Products") | Temu</PageTitle>
 
 <div class="max-w-6xl mx-auto py-8 px-4">
     <div class="flex items-center justify-between mb-8">
-        <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+        <div>
+            <h1 class="text-2xl font-bold">@(AuthService.IsAdmin ? "Admin Dashboard" : "Manage Products")</h1>
+            <p class="text-sm text-gray-500 mt-1">
+                @(AuthService.IsAdmin ? "Review and manage all store products." : "Manage your listed products and track their status.")
+            </p>
+        </div>
         <div class="flex gap-4">
-            <button @onclick='() => LoadProducts("Pending")' 
-                    class="px-4 py-2 rounded-lg text-sm font-medium @(currentFilter == "Pending" ? "bg-temu-orange text-white" : "bg-white border border-gray-200")">
-                Pending
-            </button>
-            <button @onclick='() => LoadProducts("Approved")'
-                    class="px-4 py-2 rounded-lg text-sm font-medium @(currentFilter == "Approved" ? "bg-temu-orange text-white" : "bg-white border border-gray-200")">
-                Approved
-            </button>
+            @if (AuthService.IsAdmin)
+            {
+                <div class="flex bg-gray-100 p-1 rounded-xl">
+                    <button @onclick='() => LoadProducts("Pending")' 
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all @(currentFilter == "Pending" ? "bg-white shadow-sm text-temu-orange" : "text-gray-500 hover:text-gray-700")">
+                        Pending
+                    </button>
+                    <button @onclick='() => LoadProducts("Approved")'
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all @(currentFilter == "Approved" ? "bg-white shadow-sm text-temu-orange" : "text-gray-500 hover:text-gray-700")">
+                        Approved
+                    </button>
+                </div>
+            }
+            else
+            {
+                <button @onclick='() => Navigation.NavigateTo("/admin/product/add")' 
+                        class="bg-temu-orange text-white px-6 py-2 rounded-full font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    ADD PRODUCT
+                </button>
+            }
         </div>
     </div>
 
@@ -25,62 +43,84 @@
         <div class="space-y-4">
             @for (int i = 0; i < 5; i++)
             {
-                <div class="h-16 bg-gray-100 animate-pulse rounded-lg"></div>
+                <div class="h-20 bg-gray-50 animate-pulse rounded-2xl"></div>
             }
         </div>
     }
     else if (!products.Any())
     {
-        <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-            <p class="text-gray-500">No @currentFilter.ToLower() products to show.</p>
+        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+            </div>
+            <p class="text-gray-500 font-medium">No products found.</p>
+            @if (!AuthService.IsAdmin)
+            {
+                <button @onclick='() => Navigation.NavigateTo("/admin/product/add")' class="mt-4 text-temu-orange font-bold hover:underline">List your first product</button>
+            }
         </div>
     }
     else
     {
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-gray-50/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Product</th>
+                        @if (AuthService.IsAdmin)
+                        {
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Seller</th>
+                        }
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-100">
                     @foreach (var p in products)
                     {
-                        <tr>
+                        <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <img class="h-10 w-10 rounded-lg object-cover" src="@p.ImageUrl" alt="" />
+                                    <img class="h-12 w-12 rounded-xl object-cover border border-gray-100" src="@p.ImageUrl" alt="" />
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900 truncate max-w-xs">@p.Title</div>
-                                        <div class="text-xs text-gray-500">ID: @p.Id</div>
+                                        <div class="text-sm font-bold text-gray-900 truncate max-w-[200px]">@p.Title</div>
+                                        <div class="text-xs text-gray-400">@p.Category</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @p.SellerName
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                            @if (AuthService.IsAdmin)
+                            {
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    @p.SellerName
+                                </td>
+                            }
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-temu-orange">
                                 @p.PriceFormatted
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                @p.Stock
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetStatusClass(p.Status)">
+                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full @GetStatusClass(p.Status)">
                                     @p.Status
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                @if (p.Status == "Pending")
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                @if (AuthService.IsAdmin && p.Status == "Pending")
                                 {
-                                    <button @onclick='() => UpdateStatus(p.Id, "Approved")' class="text-green-600 hover:text-green-900">Approve</button>
-                                    <button @onclick='() => UpdateStatus(p.Id, "Rejected")' class="text-red-600 hover:text-red-900">Reject</button>
+                                    <button @onclick='() => UpdateStatus(p.Id, "Approved")' class="text-green-600 hover:text-green-700 font-bold">Approve</button>
+                                    <button @onclick='() => UpdateStatus(p.Id, "Rejected")' class="text-red-600 hover:text-red-700 font-bold">Reject</button>
                                 }
                                 else
                                 {
-                                    <button @onclick="() => DeleteProduct(p.Id)" class="text-gray-400 hover:text-red-600">Delete</button>
+                                    <button @onclick='() => Navigation.NavigateTo($"/admin/product/edit/{p.Id}")' class="text-blue-600 hover:text-blue-700 font-bold">Edit</button>
+                                    <button @onclick="() => DeleteProduct(p.Id)" class="text-gray-400 hover:text-red-600 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                    </button>
                                 }
                             </td>
                         </tr>
@@ -97,20 +137,31 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!AuthService.IsAdmin)
+        if (!AuthService.IsLoggedIn)
         {
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/login");
             return;
         }
 
-        await LoadProducts(currentFilter);
+        await LoadProducts(AuthService.IsAdmin ? currentFilter : null);
     }
 
-    private async Task LoadProducts(string status)
+    private async Task LoadProducts(string? status)
     {
-        currentFilter = status;
+        currentFilter = status ?? "";
         products = null;
-        products = await FirebaseService.GetProductsAsync(status);
+        
+        var allProducts = await FirebaseService.GetProductsAsync(status);
+        
+        if (AuthService.IsAdmin)
+        {
+            products = allProducts;
+        }
+        else
+        {
+            products = allProducts.Where(p => p.SellerId == AuthService.UserId).ToList();
+        }
+        
         StateHasChanged();
     }
 
@@ -122,15 +173,19 @@
 
     private async Task DeleteProduct(string id)
     {
-        await FirebaseService.DeleteProductAsync(id);
-        await LoadProducts(currentFilter);
+        var confirmed = true; // In a real app, show a modal
+        if (confirmed)
+        {
+            await FirebaseService.DeleteProductAsync(id);
+            await LoadProducts(AuthService.IsAdmin ? currentFilter : null);
+        }
     }
 
     private string GetStatusClass(string status) => status switch
     {
-        "Approved" => "bg-green-100 text-green-800",
-        "Pending" => "bg-yellow-100 text-yellow-800",
-        "Rejected" => "bg-red-100 text-red-800",
-        _ => "bg-gray-100 text-gray-800"
+        "Approved" => "bg-green-50 text-green-700",
+        "Pending" => "bg-yellow-50 text-yellow-700",
+        "Rejected" => "bg-red-50 text-red-700",
+        _ => "bg-gray-50 text-gray-600"
     };
 }
