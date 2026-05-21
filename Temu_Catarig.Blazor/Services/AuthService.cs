@@ -9,63 +9,113 @@ public class AuthService
     private const string WebApiKey = "AIzaSyAysL9NVy9s_jGrKxnGll8_e7ctMc4UvUs";
     private const string AuthDomain = "temu-catarig.firebaseapp.com";
 
-    private readonly FirebaseAuthClient _authClient;
+    private FirebaseAuthClient? _authClient;
     private readonly ILocalStorageService _localStorage;
 
     public string? UserToken { get; private set; }
     public string? UserId { get; private set; }
     public bool IsAdmin { get; private set; }
 
+    public string? UserEmail => _authClient?.User?.Info?.Email ?? string.Empty;
+    public string? UserDisplayName => _authClient?.User?.Info?.DisplayName ?? string.Empty;
+    public bool IsLoggedIn => !string.IsNullOrEmpty(UserId);
+
+    public event Action? OnChange;
+    private void NotifyStateChanged() => OnChange?.Invoke();
+
     public AuthService(ILocalStorageService localStorage)
     {
         _localStorage = localStorage;
-        
-        var config = new FirebaseAuthConfig
-        {
-            ApiKey = WebApiKey,
-            AuthDomain = AuthDomain,
-            Providers = new FirebaseAuthProvider[]
-            {
-                new EmailProvider()
-            }
-        };
+    }
 
-        _authClient = new FirebaseAuthClient(config);
+    private void EnsureClientInitialized()
+    {
+        try
+        {
+            if (_authClient != null) return;
+
+            var config = new FirebaseAuthConfig
+            {
+                ApiKey = WebApiKey,
+                AuthDomain = AuthDomain,
+                Providers = new FirebaseAuthProvider[]
+                {
+                    new EmailProvider()
+                }
+            };
+
+            _authClient = new FirebaseAuthClient(config);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AuthService: EnsureClientInitialized failed: {ex.Message}");
+        }
     }
 
     public async Task InitializeAsync()
     {
-        UserId = await _localStorage.GetItemAsync<string>("userId");
-        UserToken = await _localStorage.GetItemAsync<string>("userToken");
-        IsAdmin = await _localStorage.GetItemAsync<bool>("isAdmin");
+        try 
+        {
+            EnsureClientInitialized();
+            
+            UserId = await _localStorage.GetItemAsync<string>("userId");
+            UserToken = await _localStorage.GetItemAsync<string>("userToken");
+            IsAdmin = await _localStorage.GetItemAsync<bool>("isAdmin");
+            
+            if (_authClient?.User != null)
+            {
+                try
+                {
+                    UserToken = await _authClient.User.GetIdTokenAsync();
+                    await _localStorage.SetItemAsync("userToken", UserToken);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"AuthService: Token refresh failed: {ex.Message}");
+                    await Logout();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AuthService: Initialization failed: {ex.Message}");
+        }
+        
+        NotifyStateChanged();
     }
 
     public async Task<string> GetFreshTokenAsync()
     {
-        if (_authClient.User != null)
+        try
         {
-            UserToken = await _authClient.User.GetIdTokenAsync();
-            await _localStorage.SetItemAsync("userToken", UserToken);
-            return UserToken;
+            EnsureClientInitialized();
+            if (_authClient?.User != null)
+            {
+                UserToken = await _authClient.User.GetIdTokenAsync();
+                await _localStorage.SetItemAsync("userToken", UserToken);
+                return UserToken;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AuthService: GetFreshTokenAsync failed: {ex.Message}");
         }
         return UserToken ?? string.Empty;
     }
-
-    public string? UserEmail => _authClient.User?.Info?.Email;
-    public string? UserDisplayName => _authClient.User?.Info?.DisplayName;
-
-    public bool IsLoggedIn => !string.IsNullOrEmpty(UserId);
 
     public async Task<(bool Success, string ErrorMessage)> RegisterUser(string email, string password)
     {
         try
         {
+            EnsureClientInitialized();
+            if (_authClient == null) return (false, "Authentication client not initialized.");
+
             var userCredential = await _authClient.CreateUserWithEmailAndPasswordAsync(email, password);
             UserToken = await userCredential.User.GetIdTokenAsync();
             UserId = userCredential.User.Uid;
+            IsAdmin = false;
             
-            await SaveAuthState();
-            
+            await SaveStateToLocalStorage();
             return (true, string.Empty);
         }
         catch (Exception ex)
@@ -76,25 +126,26 @@ public class AuthService
 
     public async Task<(bool Success, string ErrorMessage)> LoginUser(string email, string password)
     {
-        // Admin hardcoded login
-        if (email?.Trim().ToLower() == "johnadmin@gmail.com" && password == "123123")
-        {
-            IsAdmin = true;
-            UserId = "ADMIN_ID";
-            UserToken = "ADMIN_TOKEN";
-            await SaveAuthState();
-            return (true, string.Empty);
-        }
-
         try
         {
+            if (email?.Trim().ToLower() == "johnadmin@gmail.com" && password == "123123")
+            {
+                IsAdmin = true;
+                UserId = "ADMIN_ID";
+                UserToken = "ADMIN_TOKEN";
+                await SaveStateToLocalStorage();
+                return (true, string.Empty);
+            }
+
+            EnsureClientInitialized();
+            if (_authClient == null) return (false, "Authentication client not initialized.");
+
             var userCredential = await _authClient.SignInWithEmailAndPasswordAsync(email, password);
             UserToken = await userCredential.User.GetIdTokenAsync();
             UserId = userCredential.User.Uid;
             IsAdmin = false;
             
-            await SaveAuthState();
-            
+            await SaveStateToLocalStorage();
             return (true, string.Empty);
         }
         catch (Exception ex)
@@ -103,29 +154,50 @@ public class AuthService
         }
     }
 
-    private async Task SaveAuthState()
-    {
-        await _localStorage.SetItemAsync("userId", UserId);
-        await _localStorage.SetItemAsync("userToken", UserToken);
-        await _localStorage.SetItemAsync("isAdmin", IsAdmin);
-    }
-
     public async Task Logout()
     {
-        if (!IsAdmin)
+        try
         {
-            _authClient.SignOut();
+            if (!IsAdmin && _authClient?.User != null)
+            {
+                _authClient.SignOut();
+            }
         }
-        UserToken = null;
-        UserId = null;
-        IsAdmin = false;
-        await _localStorage.ClearAsync();
+        catch { }
+
+        try
+        {
+            UserToken = null;
+            UserId = null;
+            IsAdmin = false;
+            await _localStorage.ClearAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AuthService: Logout failed to clear storage: {ex.Message}");
+        }
+        
+        NotifyStateChanged();
+    }
+
+    private async Task SaveStateToLocalStorage()
+    {
+        try
+        {
+            await _localStorage.SetItemAsync("userId", UserId);
+            await _localStorage.SetItemAsync("userToken", UserToken);
+            await _localStorage.SetItemAsync("isAdmin", IsAdmin);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AuthService: SaveStateToLocalStorage failed: {ex.Message}");
+        }
+        NotifyStateChanged();
     }
 
     private string GetFriendlyErrorMessage(string technicalMessage)
     {
         if (string.IsNullOrEmpty(technicalMessage)) return "An unexpected error occurred.";
-        
         if (technicalMessage.Contains("INVALID_LOGIN_CREDENTIALS") || technicalMessage.Contains("INVALID_PASSWORD"))
             return "Invalid email or password.";
         if (technicalMessage.Contains("EMAIL_EXISTS"))
@@ -134,7 +206,6 @@ public class AuthService
             return "Password should be at least 6 characters.";
         if (technicalMessage.Contains("INVALID_EMAIL"))
             return "Please enter a valid email address.";
-        
         return technicalMessage;
     }
 }

@@ -15,6 +15,13 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<FirebaseService>();
 
-var host = builder.Build();
-
-await host.RunAsync();
+try 
+{
+    var host = builder.Build();
+    await host.RunAsync();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Program: Fatal crash: {ex.Message}");
+    throw;
+}

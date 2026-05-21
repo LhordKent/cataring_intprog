@@ -1,21 +1,77 @@
-﻿@inject AuthService AuthService
+@inject AuthService AuthService
 
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+@if (!isInitialized)
+{
+    <div class="flex items-center justify-center min-h-screen bg-slate-50">
+        <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-temu-orange border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-slate-500 font-medium animate-pulse">Loading Temu...</p>
+        </div>
+    </div>
+}
+else
+{
+    <ErrorBoundary>
+        <ChildContent>
+            <Router AppAssembly="@typeof(App).Assembly">
+                <Found Context="routeData">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                </Found>
+                <NotFound>
+                    <PageTitle>Not found</PageTitle>
+                    <LayoutView Layout="@typeof(MainLayout)">
+                        <div class="flex flex-col items-center justify-center py-20 text-center">
+                            <div class="text-6xl mb-4">🔍</div>
+                            <h1 class="text-2xl font-bold text-slate-800 mb-2">Page Not Found</h1>
+                            <p class="text-slate-600 mb-6">Sorry, we couldn't find the page you're looking for.</p>
+                            <NavLink href="/" class="btn-primary py-2 px-8">Go Home</NavLink>
+                        </div>
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </ChildContent>
+        <ErrorContent Context="ex">
+            <div class="flex items-center justify-center min-h-screen bg-red-50 p-6">
+                <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 border border-red-100">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                        <h1 class="text-2xl font-bold text-slate-800">Something went wrong</h1>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-4 mb-6 overflow-auto max-h-[400px]">
+                        <p class="text-red-600 font-mono text-sm break-words mb-4">@ex.Message</p>
+                        <pre class="text-slate-500 font-mono text-xs">@ex.StackTrace</pre>
+                    </div>
+                    <button @onclick="async () => { isInitialized = false; await OnInitializedAsync(); }" class="btn-primary w-full py-3">Try Again</button>
+                </div>
+            </div>
+        </ErrorContent>
+    </ErrorBoundary>
+}
 
 @code {
+    private bool isInitialized = false;
+
     protected override async Task OnInitializedAsync()
     {
-        await AuthService.InitializeAsync();
+        Console.WriteLine("App: Initializing...");
+        try
+        {
+            await AuthService.InitializeAsync();
+            Console.WriteLine("App: AuthService initialized successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"App: Critical error during initialization: {ex.Message}");
+            // We still set isInitialized = true so the ErrorBoundary or Found/NotFound logic can render.
+            // If it's a critical crash, ErrorBoundary should catch it.
+        }
+        finally
+        {
+            isInitialized = true;
+            Console.WriteLine("App: Initialization complete.");
+        }
     }
 }

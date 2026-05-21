@@ -1,83 +1,99 @@
-@page "/checkout"
+@page "/cart"
 @inject FirebaseService FirebaseService
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
-<PageTitle>Checkout | Temu</PageTitle>
+<PageTitle>Your Cart | Temu</PageTitle>
 
-<div class="max-w-4xl mx-auto py-8 px-4">
-    <h1 class="text-2xl font-bold mb-8">Checkout</h1>
+<div class="max-w-6xl mx-auto py-8 px-4">
+    <h1 class="text-2xl font-bold mb-8">Shopping Cart (@cartItems.Count)</h1>
 
-    @if (isPlacingOrder)
+    @if (cartItems == null)
     {
-        <div class="text-center py-20">
-            <svg class="animate-spin h-12 w-12 mx-auto text-temu-orange mb-4" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="text-gray-600 font-medium">Placing your order...</p>
+        <div class="space-y-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="h-32 bg-gray-100 animate-pulse rounded-xl"></div>
+            }
+        </div>
+    }
+    else if (!cartItems.Any())
+    {
+        <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+            <div class="text-6xl mb-4">🛒</div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
+            <p class="text-gray-500 mb-8">Looks like you haven't added anything to your cart yet.</p>
+            <NavLink href="/" class="btn-primary py-3 px-12">Start Shopping</NavLink>
         </div>
     }
     else
     {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Shipping Address -->
-                <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Shipping Address
-                    </h2>
-                    <div class="space-y-4">
-                        <input type="text" placeholder="Full Name" @bind="profile.FullName"
-                               class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-temu-orange/20" />
-                        <input type="text" placeholder="Phone Number" @bind="profile.PhoneNumber"
-                               class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-temu-orange/20" />
-                        <textarea placeholder="Complete Address" @bind="profile.ShippingAddress" rows="3"
-                                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-temu-orange/20"></textarea>
+            <!-- Cart Items -->
+            <div class="lg:col-span-2 space-y-4">
+                @foreach (var item in cartItems)
+                {
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
+                        <img src="@item.ImageUrl" class="w-24 h-24 object-cover rounded-lg flex-shrink-0" alt="@item.Title" />
+                        
+                        <div class="flex-1 flex flex-col">
+                            <div class="flex justify-between gap-4 mb-1">
+                                <h3 class="text-sm font-medium text-gray-900 line-clamp-2">@item.Title</h3>
+                                <button @onclick="() => RemoveItem(item.ProductId)" class="text-gray-400 hover:text-red-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                </button>
+                            </div>
+                            
+                            <div class="text-xs text-gray-500 mb-auto">Seller: @item.SellerName</div>
+                            
+                            <div class="flex items-center justify-between mt-4">
+                                <span class="text-lg font-bold text-temu-orange">₱@item.Price.ToString("N0")</span>
+                                
+                                <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                                    <button @onclick="() => UpdateQuantity(item, -1)" class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold">-</button>
+                                    <span class="px-4 py-1 text-sm font-medium w-12 text-center">@item.Quantity</span>
+                                    <button @onclick="() => UpdateQuantity(item, 1)" class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold">+</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </section>
-
-                <!-- Payment Method -->
-                <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10"/></svg>
-                        Payment Method
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button class="p-4 border-2 rounded-xl text-left border-temu-orange bg-temu-orange/5">
-                            <span class="font-bold block">Cash on Delivery</span>
-                            <span class="text-xs text-gray-500">Pay when you receive the package</span>
-                        </button>
-                        <button class="p-4 border-2 rounded-xl text-left border-gray-100 hover:border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed">
-                            <span class="font-bold block">GCash / Card</span>
-                            <span class="text-xs text-gray-500 italic">Coming Soon</span>
-                        </button>
-                    </div>
-                </section>
+                }
             </div>
 
+            <!-- Summary -->
             <div class="lg:col-span-1">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
-                    <h2 class="text-lg font-bold mb-4">Order Summary</h2>
-                    <div class="space-y-3 text-sm text-gray-600 mb-6">
-                        @foreach (var item in cartItems)
-                        {
-                            <div class="flex justify-between">
-                                <span class="truncate pr-4">@item.Quantity x @item.Title</span>
-                                <span class="flex-shrink-0 font-medium">₱@((item.Price * item.Quantity).ToString("N0"))</span>
-                            </div>
-                        }
-                        <div class="pt-3 border-t border-gray-100 flex justify-between text-lg font-bold text-gray-900">
+                    <h2 class="text-lg font-bold mb-6">Order Summary</h2>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span>₱@Subtotal.ToString("N0")</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Shipping</span>
+                            <span class="text-green-600 font-medium">FREE</span>
+                        </div>
+                        <div class="pt-4 border-t border-gray-100 flex justify-between text-xl font-bold text-gray-900">
                             <span>Total</span>
                             <span class="text-temu-orange">₱@Subtotal.ToString("N0")</span>
                         </div>
                     </div>
-                    <button @onclick="PlaceOrder" 
-                            disabled="@(cartItems.Count == 0 || string.IsNullOrEmpty(profile.ShippingAddress))"
-                            class="w-full btn-primary py-3 font-bold text-lg disabled:opacity-50">
-                        PLACE ORDER
+                    
+                    <button @onclick="GoToCheckout" class="w-full btn-primary py-4 font-bold text-lg shadow-lg shadow-temu-orange/20">
+                        CHECKOUT
                     </button>
+                    
+                    <div class="mt-6 flex flex-col gap-3">
+                        <div class="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Secure Checkout
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                            Free Returns
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,8 +102,6 @@
 
 @code {
     private List<CartItem> cartItems = new();
-    private UserProfile profile = new();
-    private bool isPlacingOrder;
     private double Subtotal => cartItems.Sum(i => i.Price * i.Quantity);
 
     protected override async Task OnInitializedAsync()
@@ -98,52 +112,32 @@
             return;
         }
 
-        cartItems = await FirebaseService.GetCartItemsAsync(AuthService.UserId!);
-        if (!cartItems.Any())
-        {
-            Navigation.NavigateTo("/cart");
-            return;
-        }
-
-        profile = await FirebaseService.GetUserProfileAsync(AuthService.UserId!);
+        await LoadCart();
     }
 
-    private async Task PlaceOrder()
+    private async Task LoadCart()
     {
-        isPlacingOrder = true;
+        cartItems = await FirebaseService.GetCartItemsAsync(AuthService.UserId!);
+    }
 
-        // Group items by seller for order splitting
-        var ordersBySeller = cartItems.GroupBy(i => i.SellerId);
+    private async Task UpdateQuantity(CartItem item, int delta)
+    {
+        item.Quantity += delta;
+        if (item.Quantity < 1) item.Quantity = 1;
+        if (item.Quantity > 99) item.Quantity = 99;
 
-        foreach (var group in ordersBySeller)
-        {
-            var sellerItems = group.ToList();
-            var sellerSubtotal = sellerItems.Sum(i => i.Price * i.Quantity);
+        await FirebaseService.AddToCartAsync(AuthService.UserId!, item);
+        await LoadCart();
+    }
 
-            var order = new Order
-            {
-                BuyerId = AuthService.UserId!,
-                SellerId = group.Key,
-                SellerName = sellerItems[0].SellerName,
-                Items = sellerItems,
-                Subtotal = sellerSubtotal,
-                ShippingFee = 0,
-                TotalPrice = sellerSubtotal,
-                Status = "Pending",
-                OrderDate = DateTime.Now,
-                ReceiverName = profile.FullName,
-                ReceiverPhone = profile.PhoneNumber,
-                ShippingAddress = profile.ShippingAddress
-            };
+    private async Task RemoveItem(string productId)
+    {
+        await FirebaseService.RemoveFromCartAsync(AuthService.UserId!, productId);
+        await LoadCart();
+    }
 
-            await FirebaseService.PlaceOrderAsync(order);
-        }
-
-        // Clear cart and save profile
-        await FirebaseService.ClearCartAsync(AuthService.UserId!);
-        await FirebaseService.SaveUserProfileAsync(profile);
-
-        Navigation.NavigateTo("/"); // Future: Order success page
-        isPlacingOrder = false;
+    private void GoToCheckout()
+    {
+        Navigation.NavigateTo("/checkout");
     }
 }

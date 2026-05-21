@@ -1,17 +1,11 @@
 @inherits LayoutComponentBase
 
-<div class="min-h-screen flex flex-col">
+<div class="min-h-screen flex flex-col bg-slate-50">
     <NavMenu />
 
-    <main class="flex-1 pb-20 md:pb-0">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-1 overflow-y-auto pb-20 md:pb-0">
+        <div class="max-w-[1200px] mx-auto w-full px-4 md:px-6 py-6">
             @Body
         </div>
     </main>
-
-    <footer class="hidden md:block bg-gray-900 text-white py-12 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-400">
-            <p>&copy; 2026 Temu Catarig. All rights reserved.</p>
-        </div>
-    </footer>
 </div>
