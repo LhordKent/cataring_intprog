@@ -1,0 +1,136 @@
+@page "/admin/dashboard"
+@inject FirebaseService FirebaseService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Admin Dashboard | Temu</PageTitle>
+
+<div class="max-w-6xl mx-auto py-8 px-4">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+        <div class="flex gap-4">
+            <button @onclick='() => LoadProducts("Pending")' 
+                    class="px-4 py-2 rounded-lg text-sm font-medium @(currentFilter == "Pending" ? "bg-temu-orange text-white" : "bg-white border border-gray-200")">
+                Pending
+            </button>
+            <button @onclick='() => LoadProducts("Approved")'
+                    class="px-4 py-2 rounded-lg text-sm font-medium @(currentFilter == "Approved" ? "bg-temu-orange text-white" : "bg-white border border-gray-200")">
+                Approved
+            </button>
+        </div>
+    </div>
+
+    @if (products == null)
+    {
+        <div class="space-y-4">
+            @for (int i = 0; i < 5; i++)
+            {
+                <div class="h-16 bg-gray-100 animate-pulse rounded-lg"></div>
+            }
+        </div>
+    }
+    else if (!products.Any())
+    {
+        <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+            <p class="text-gray-500">No @currentFilter.ToLower() products to show.</p>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var p in products)
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <img class="h-10 w-10 rounded-lg object-cover" src="@p.ImageUrl" alt="" />
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900 truncate max-w-xs">@p.Title</div>
+                                        <div class="text-xs text-gray-500">ID: @p.Id</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @p.SellerName
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                @p.PriceFormatted
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetStatusClass(p.Status)">
+                                    @p.Status
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                @if (p.Status == "Pending")
+                                {
+                                    <button @onclick="() => UpdateStatus(p.Id,  Approved )" class="text-green-600 hover:text-green-900">Approve</button>
+                                    <button @onclick="() => UpdateStatus(p.Id,  Rejected )" class="text-red-600 hover:text-red-900">Reject</button>
+                                }
+                                else
+                                {
+                                    <button @onclick="() => DeleteProduct(p.Id)" class="text-gray-400 hover:text-red-600">Delete</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Product>? products;
+    private string currentFilter = "Pending";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAdmin)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadProducts(currentFilter);
+    }
+
+    private async Task LoadProducts(string status)
+    {
+        currentFilter = status;
+        products = null;
+        products = await FirebaseService.GetProductsAsync(status);
+        StateHasChanged();
+    }
+
+    private async Task UpdateStatus(string id, string status)
+    {
+        await FirebaseService.UpdateProductStatusAsync(id, status);
+        await LoadProducts(currentFilter);
+    }
+
+    private async Task DeleteProduct(string id)
+    {
+        await FirebaseService.DeleteProductAsync(id);
+        await LoadProducts(currentFilter);
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Approved" => "bg-green-100 text-green-800",
+        "Pending" => "bg-yellow-100 text-yellow-800",
+        "Rejected" => "bg-red-100 text-red-800",
+        _ => "bg-gray-100 text-gray-800"
+    };
+}
