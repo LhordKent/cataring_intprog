@@ -1,7 +1,87 @@
-﻿@page "/"
+@page "/"
+@inject FirebaseService FirebaseService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Temu | Shop with us</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- Hero Section -->
+<div class="relative rounded-2xl overflow-hidden mb-8 bg-slate-900 aspect-[21/9] md:aspect-[21/7]">
+    <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop" 
+         class="w-full h-full object-cover opacity-60" alt="Hero" />
+    <div class="absolute inset-0 flex flex-col justify-center px-8 md:px-16 text-white">
+        <h1 class="text-3xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">Shop Like a Billionaire</h1>
+        <p class="text-lg md:text-xl mb-6 text-gray-200 drop-shadow-md">Up to 90% OFF on everything you love!</p>
+        <div class="flex gap-4">
+            <button class="btn-primary py-3 px-8 text-lg">Shop Now</button>
+        </div>
+    </div>
+</div>
 
-Welcome to your new app.
+<!-- Categories Quick Links -->
+<div class="flex gap-4 overflow-x-auto pb-6 scrollbar-hide no-scrollbar">
+    @foreach (var cat in categories)
+    {
+        <button class="flex-shrink-0 flex flex-col items-center gap-2 group">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:border-temu-orange transition-colors">
+                <span class="text-2xl">@cat.Icon</span>
+            </div>
+            <span class="text-xs font-medium text-gray-600">@cat.Name</span>
+        </button>
+    }
+</div>
+
+<!-- Product Grid -->
+<div class="mb-8">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            Recommended for you
+        </h2>
+    </div>
+
+    @if (products == null)
+    {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            @for (int i = 0; i < 10; i++)
+            {
+                <div class="bg-gray-100 animate-pulse rounded-xl aspect-[3/4]"></div>
+            }
+        </div>
+    }
+    else if (!products.Any())
+    {
+        <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+            <p class="text-gray-500">No products found. Check back later!</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            @foreach (var product in products)
+            {
+                <Temu_Catarig.Blazor.Components.ProductCard Product="@product" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Product>? products;
+    private List<(string Name, string Icon)> categories = new()
+    {
+        ("Fashion", "👕"), ("Beauty", "💄"), ("Home", "🏠"), ("Electronics", "💻"),
+        ("Kitchen", "🍳"), ("Toys", "🧸"), ("Sports", "⚽"), ("Automotive", "🚗")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await FirebaseService.GetProductsAsync("Approved");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching products: {ex.Message}");
+            products = new List<Product>();
+        }
+    }
+}

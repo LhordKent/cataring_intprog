@@ -1,0 +1,64 @@
+@inject FirebaseService FirebaseService
+@inject AuthService AuthService
+
+<div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+    <div class="relative aspect-square overflow-hidden bg-gray-100">
+        <img src="@Product.ImageUrl" alt="@Product.Title" 
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        
+        @if (Product.Stock <= 0)
+        {
+            <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span class="bg-white text-black text-xs font-bold px-3 py-1 rounded-full uppercase">Out of Stock</span>
+            </div>
+        }
+    </div>
+
+    <div class="p-3">
+        <h3 class="text-sm text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight mb-1">@Product.Title</h3>
+        
+        <div class="flex items-center gap-1 text-temu-orange text-xs font-bold mb-2">
+            <span>@Product.RatingFormatted</span>
+            <span class="text-gray-400 font-normal">(@Product.ReviewsCount)</span>
+        </div>
+
+        <div class="flex items-center justify-between mt-auto">
+            <div class="flex flex-col">
+                <span class="text-lg font-bold text-temu-orange">@Product.PriceFormatted</span>
+                <span class="text-[10px] text-gray-500">Sold: 1k+</span>
+            </div>
+            
+            <button @onclick="AddToCart" 
+                    disabled="@(Product.Stock <= 0)"
+                    class="bg-temu-orange/10 text-temu-orange hover:bg-temu-orange hover:text-white p-2 rounded-full transition-colors disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Product Product { get; set; } = new();
+
+    private async Task AddToCart()
+    {
+        if (!AuthService.IsLoggedIn)
+        {
+            // Future: Show login prompt
+            return;
+        }
+
+        var cartItem = new CartItem
+        {
+            ProductId = Product.Id,
+            Title = Product.Title,
+            ImageUrl = Product.ImageUrl,
+            Price = Product.Price,
+            Quantity = 1,
+            SellerId = Product.SellerId,
+            SellerName = Product.SellerName
+        };
+
+        await FirebaseService.AddToCartAsync(AuthService.UserId!, cartItem);
+    }
+}
