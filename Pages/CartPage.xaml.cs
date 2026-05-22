@@ -34,6 +34,39 @@ namespace Temu_Catarig.Pages
             try
             {
                 var items = await _firebaseService.GetCartItemsAsync(AuthService.UserId!);
+                bool modificationsOccurred = false;
+
+                if (items != null && items.Count > 0)
+                {
+                    var itemsToRemove = new List<Models.CartItem>();
+                    foreach (var item in items)
+                    {
+                        var latestProduct = await _firebaseService.GetProductByIdAsync(item.ProductId);
+                        if (latestProduct == null || latestProduct.Stock <= 0)
+                        {
+                            await _firebaseService.RemoveFromCartAsync(AuthService.UserId!, item.ProductId);
+                            itemsToRemove.Add(item);
+                            modificationsOccurred = true;
+                        }
+                        else if (item.Quantity > latestProduct.Stock)
+                        {
+                            item.Quantity = latestProduct.Stock;
+                            await _firebaseService.AddToCartAsync(AuthService.UserId!, item);
+                            modificationsOccurred = true;
+                        }
+                    }
+
+                    foreach (var rem in itemsToRemove)
+                    {
+                        items.Remove(rem);
+                    }
+                }
+
+                if (modificationsOccurred)
+                {
+                    await DisplayAlert("Notice", "Some items in your cart were updated or removed due to stock changes.", "OK");
+                }
+
                 CartCollection.ItemsSource = items;
 
                 bool hasItems = items != null && items.Count > 0;
@@ -58,8 +91,29 @@ namespace Temu_Catarig.Pages
         {
             if (sender is Button btn && btn.CommandParameter is Models.CartItem item)
             {
-                item.Quantity++;
-                await _firebaseService.AddToCartAsync(AuthService.UserId!, item);
+                var latestProduct = await _firebaseService.GetProductByIdAsync(item.ProductId);
+                if (latestProduct == null || latestProduct.Stock <= 0)
+                {
+                    await _firebaseService.RemoveFromCartAsync(AuthService.UserId!, item.ProductId);
+                    await DisplayAlert("Error", "This product is no longer available.", "OK");
+                    await LoadCart();
+                    return;
+                }
+
+                if (item.Quantity + 1 > latestProduct.Stock)
+                {
+                    await DisplayAlert("Error", $"Cannot add more items. Only {latestProduct.Stock} available in stock.", "OK");
+                    if (item.Quantity > latestProduct.Stock)
+                    {
+                        item.Quantity = latestProduct.Stock;
+                        await _firebaseService.AddToCartAsync(AuthService.UserId!, item);
+                    }
+                }
+                else
+                {
+                    item.Quantity++;
+                    await _firebaseService.AddToCartAsync(AuthService.UserId!, item);
+                }
                 await LoadCart();
             }
         }
@@ -68,9 +122,25 @@ namespace Temu_Catarig.Pages
         {
             if (sender is Button btn && btn.CommandParameter is Models.CartItem item)
             {
+                var latestProduct = await _firebaseService.GetProductByIdAsync(item.ProductId);
+                if (latestProduct == null || latestProduct.Stock <= 0)
+                {
+                    await _firebaseService.RemoveFromCartAsync(AuthService.UserId!, item.ProductId);
+                    await DisplayAlert("Error", "This product is no longer available.", "OK");
+                    await LoadCart();
+                    return;
+                }
+
                 if (item.Quantity > 1)
                 {
-                    item.Quantity--;
+                    if (item.Quantity > latestProduct.Stock)
+                    {
+                        item.Quantity = latestProduct.Stock;
+                    }
+                    else
+                    {
+                        item.Quantity--;
+                    }
                     await _firebaseService.AddToCartAsync(AuthService.UserId!, item);
                 }
                 else

@@ -91,9 +91,21 @@ namespace Temu_Catarig.Pages
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(NameEntry.Text) || string.IsNullOrEmpty(PriceEntry.Text))
+            if (string.IsNullOrEmpty(NameEntry.Text))
             {
-                await DisplayAlert("Error", "Please fill in at least the Name and Price.", "OK");
+                await DisplayAlert("Error", "Please enter a product name.", "OK");
+                return;
+            }
+
+            if (!double.TryParse(PriceEntry.Text, out double price) || price <= 0)
+            {
+                await DisplayAlert("Error", "Price must be a positive number.", "OK");
+                return;
+            }
+
+            if (!int.TryParse(StockEntry.Text ?? "0", out int stock) || stock < 0)
+            {
+                await DisplayAlert("Error", "Stock must be a non-negative integer.", "OK");
                 return;
             }
 
@@ -107,8 +119,8 @@ namespace Temu_Catarig.Pages
             {
                 var productToSave = _product ?? new Product();
                 productToSave.Title = NameEntry.Text;
-                productToSave.Price = double.Parse(PriceEntry.Text);
-                productToSave.Stock = int.Parse(StockEntry.Text ?? "0");
+                productToSave.Price = price;
+                productToSave.Stock = stock;
                 productToSave.Category = CategoryEntry.Text ?? "General";
                 productToSave.Description = DescriptionEditor.Text ?? "";
                 productToSave.ImageUrl = _imageUrl;

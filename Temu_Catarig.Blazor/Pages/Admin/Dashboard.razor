@@ -3,137 +3,222 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
-<PageTitle>@(AuthService.IsAdmin ? "Admin Dashboard" : "Manage Products") | Temu</PageTitle>
+<PageTitle>@(AuthService.IsAdmin ? "Admin Dashboard" : "Seller Dashboard") | Temu</PageTitle>
 
-<div class="max-w-6xl mx-auto py-8 px-4">
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-2xl font-bold">@(AuthService.IsAdmin ? "Admin Dashboard" : "Manage Products")</h1>
-            <p class="text-sm text-gray-500 mt-1">
-                @(AuthService.IsAdmin ? "Review and manage all store products." : "Manage your listed products and track their status.")
-            </p>
-        </div>
-        <div class="flex gap-4">
-            @if (AuthService.IsAdmin)
-            {
-                <div class="flex bg-gray-100 p-1 rounded-xl">
-                    <button @onclick='() => LoadProducts("Pending")' 
-                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all @(currentFilter == "Pending" ? "bg-white shadow-sm text-temu-orange" : "text-gray-500 hover:text-gray-700")">
-                        Pending
-                    </button>
-                    <button @onclick='() => LoadProducts("Approved")'
-                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all @(currentFilter == "Approved" ? "bg-white shadow-sm text-temu-orange" : "text-gray-500 hover:text-gray-700")">
-                        Approved
-                    </button>
-                </div>
-            }
-            else
-            {
-                <button @onclick='() => Navigation.NavigateTo("/admin/product/add")' 
-                        class="bg-temu-orange text-white px-6 py-2 rounded-full font-bold hover:bg-orange-600 transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                    ADD PRODUCT
-                </button>
-            }
-        </div>
-    </div>
-
-    @if (products == null)
+<div class="max-w-4xl mx-auto py-8 px-4 flex flex-col min-h-screen">
+    @if (isProfileLoading)
     {
-        <div class="space-y-4">
-            @for (int i = 0; i < 5; i++)
-            {
-                <div class="h-20 bg-gray-50 animate-pulse rounded-2xl"></div>
-            }
+        <div class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-temu-orange"></div>
         </div>
     }
-    else if (!products.Any())
+    else if (!AuthService.IsAdmin && string.IsNullOrWhiteSpace(userProfile?.FullName))
     {
-        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
-            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+        <!-- Profile Incomplete Card (Seller) -->
+        <div class="max-w-md mx-auto my-12 p-8 bg-white rounded-3xl border border-gray-100 shadow-xl text-center">
+            <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
             </div>
-            <p class="text-gray-500 font-medium">No products found.</p>
-            @if (!AuthService.IsAdmin)
-            {
-                <button @onclick='() => Navigation.NavigateTo("/admin/product/add")' class="mt-4 text-temu-orange font-bold hover:underline">List your first product</button>
-            }
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Profile Incomplete</h2>
+            <p class="text-gray-500 text-sm mb-6 leading-relaxed">To start selling and managing products, please set your full name in your profile first.</p>
+            <button @onclick='() => Navigation.NavigateTo("/profile/edit")' class="w-full py-3.5 bg-temu-orange text-white rounded-full font-bold shadow-lg shadow-temu-orange/20 hover:bg-orange-600 hover:shadow-orange-600/30 transition-all duration-200">
+                Complete Profile
+            </button>
         </div>
     }
     else
     {
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-100">
-                <thead class="bg-gray-50/50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Product</th>
-                        @if (AuthService.IsAdmin)
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900">
+                    @(AuthService.IsAdmin ? "Admin Dashboard" : "Seller Dashboard")
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    @(AuthService.IsAdmin 
+                        ? "Manage platform status and approve pending products" 
+                        : $"Welcome back, {userProfile?.FullName}! Manage your products and shop.")
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button @onclick='() => Navigation.NavigateTo("/profile")' class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
+                    Back to Profile
+                </button>
+                <button @onclick="Logout" class="px-5 py-2.5 bg-black text-white rounded-full text-sm font-bold hover:bg-gray-800 transition-colors">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        @if (AuthService.IsAdmin)
+        {
+            <!-- Admin Dashboard -->
+            <div class="flex-1">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Pending Approvals</h2>
+
+                @if (products == null)
+                {
+                    <div class="space-y-4">
+                        @for (int i = 0; i < 3; i++)
                         {
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Seller</th>
+                            <div class="h-32 bg-gray-100 animate-pulse rounded-2xl"></div>
                         }
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Price</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Stock</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                    @foreach (var p in products)
-                    {
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img class="h-12 w-12 rounded-xl object-cover border border-gray-100" src="@p.ImageUrl" alt="" />
-                                    <div class="ml-4">
-                                        <div class="text-sm font-bold text-gray-900 truncate max-w-[200px]">@p.Title</div>
-                                        <div class="text-xs text-gray-400">@p.Category</div>
+                    </div>
+                }
+                else if (!products.Any())
+                {
+                    <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                        <p class="text-gray-500 font-medium italic">No pending products to approve</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        @foreach (var p in products)
+                        {
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <img class="h-16 w-16 rounded-xl object-cover bg-gray-50 border border-gray-100" src="@p.ImageUrl" alt="" />
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-bold text-gray-900 truncate">@p.Title</div>
+                                        <div class="text-sm font-medium text-gray-400 mt-0.5">₱@p.Price.ToString("N0")</div>
+                                        <div class="text-xs text-gray-400 mt-1">Seller: @p.SellerName</div>
                                     </div>
                                 </div>
-                            </td>
-                            @if (AuthService.IsAdmin)
-                            {
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    @p.SellerName
-                                </td>
-                            }
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-temu-orange">
-                                @p.PriceFormatted
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                @p.Stock
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full @GetStatusClass(p.Status)">
-                                    @p.Status
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                @if (AuthService.IsAdmin && p.Status == "Pending")
-                                {
-                                    <button @onclick='() => UpdateStatus(p.Id, "Approved")' class="text-green-600 hover:text-green-700 font-bold">Approve</button>
-                                    <button @onclick='() => UpdateStatus(p.Id, "Rejected")' class="text-red-600 hover:text-red-700 font-bold">Reject</button>
-                                }
-                                else
-                                {
-                                    <button @onclick='() => Navigation.NavigateTo($"/admin/product/edit/{p.Id}")' class="text-blue-600 hover:text-blue-700 font-bold">Edit</button>
-                                    <button @onclick="() => DeleteProduct(p.Id)" class="text-gray-400 hover:text-red-600 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button @onclick='() => UpdateStatus(p.Id, "Rejected")' 
+                                            class="py-3 bg-red-50 text-red-700 rounded-xl font-bold text-xs uppercase hover:bg-red-100 transition-colors tracking-widest">
+                                        REJECT
                                     </button>
-                                }
-                            </td>
-                        </tr>
+                                    <button @onclick='() => UpdateStatus(p.Id, "Approved")'
+                                            class="py-3 bg-green-50 text-green-700 rounded-xl font-bold text-xs uppercase hover:bg-green-100 transition-colors tracking-widest">
+                                        APPROVE
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Seller Dashboard -->
+            <div class="flex-1 flex flex-col gap-8">
+                <!-- Action Tiles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <button @onclick='() => Navigation.NavigateTo("/admin/product/add")' 
+                            class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-left group">
+                        <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-orange-100 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900">Add New Product</h3>
+                        <p class="text-xs text-gray-500 mt-1">List a new product in the marketplace.</p>
+                    </button>
+
+                    <button @onclick='() => Navigation.NavigateTo("/admin/fulfillment")' 
+                            class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-left group">
+                        <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900">Order Fulfillment</h3>
+                        <p class="text-xs text-gray-500 mt-1">Process pending orders and shipping.</p>
+                    </button>
+                </div>
+
+                <!-- Product Management List -->
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">My Listed Products</h2>
+                        @if (products != null)
+                        {
+                            <span class="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">@products.Count Products</span>
+                        }
+                    </div>
+
+                    @if (products == null)
+                    {
+                        <div class="space-y-4">
+                            @for (int i = 0; i < 3; i++)
+                            {
+                                <div class="h-24 bg-gray-100 animate-pulse rounded-2xl"></div>
+                            }
+                        </div>
                     }
-                </tbody>
-            </table>
-        </div>
+                    else if (!products.Any())
+                    {
+                        <div class="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
+                            <p class="text-gray-500 font-medium italic">No products listed yet.</p>
+                            <button @onclick='() => Navigation.NavigateTo("/admin/product/add")' class="mt-4 text-temu-orange font-bold hover:underline">List your first product</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @foreach (var p in products)
+                            {
+                                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center gap-4 min-w-0">
+                                        <img class="h-16 w-16 rounded-xl object-cover bg-gray-50 border border-gray-100 flex-shrink-0" src="@p.ImageUrl" alt="" />
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-bold text-gray-900 truncate">@p.Title</div>
+                                            <div class="flex items-center gap-3 mt-1 flex-wrap">
+                                                <span class="text-sm font-semibold text-gray-900">₱@p.Price.ToString("N0")</span>
+                                                <span class="text-xs text-gray-400">Stock: @p.Stock</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase @GetStatusClass(p.Status)">
+                                                    @p.Status
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <button @onclick='() => Navigation.NavigateTo($"/admin/product/edit/{p.Id}")' 
+                                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                        </button>
+                                        <button @onclick='() => ConfirmDelete(p.Id, p.Title)' 
+                                                class="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     }
 </div>
 
+@if (!string.IsNullOrEmpty(confirmDeleteProductId))
+{
+    <!-- Delete Confirmation Modal -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+            <h2 class="text-xl font-bold mb-3 text-gray-900">Delete Product?</h2>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed">Are you sure you want to delete <span class="font-bold text-gray-800">"@deleteProductName"</span>? This action cannot be undone.</p>
+            
+            <div class="flex gap-3">
+                <button @onclick="CancelDelete" class="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-50 rounded-full transition-colors">
+                    Cancel
+                </button>
+                <button @onclick="ExecuteDelete" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-full hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Product>? products;
-    private string currentFilter = "Pending";
+    private UserProfile? userProfile;
+    private bool isProfileLoading = true;
+    private string? confirmDeleteProductId;
+    private string? deleteProductName;
 
     protected override async Task OnInitializedAsync()
     {
@@ -143,49 +228,115 @@
             return;
         }
 
-        await LoadProducts(AuthService.IsAdmin ? currentFilter : null);
-    }
+        try
+        {
+            isProfileLoading = true;
+            userProfile = await FirebaseService.GetUserProfileAsync(AuthService.UserId!);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user profile: {ex.Message}");
+        }
+        finally
+        {
+            isProfileLoading = false;
+        }
 
-    private async Task LoadProducts(string? status)
-    {
-        currentFilter = status ?? "";
-        products = null;
-        
-        var allProducts = await FirebaseService.GetProductsAsync(status);
-        
         if (AuthService.IsAdmin)
         {
+            await LoadPendingProducts();
+        }
+        else if (userProfile != null && !string.IsNullOrEmpty(userProfile.FullName))
+        {
+            await LoadSellerProducts();
+        }
+    }
+
+    private async Task LoadPendingProducts()
+    {
+        products = null;
+        try
+        {
+            var allProducts = await FirebaseService.GetProductsAsync("Pending");
             products = allProducts;
         }
-        else
+        catch (Exception ex)
         {
+            Console.WriteLine($"Error loading pending products: {ex.Message}");
+            products = new List<Product>();
+        }
+        StateHasChanged();
+    }
+
+    private async Task LoadSellerProducts()
+    {
+        products = null;
+        try
+        {
+            var allProducts = await FirebaseService.GetProductsAsync();
             products = allProducts.Where(p => p.SellerId == AuthService.UserId).ToList();
         }
-        
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading seller products: {ex.Message}");
+            products = new List<Product>();
+        }
         StateHasChanged();
     }
 
     private async Task UpdateStatus(string id, string status)
     {
-        await FirebaseService.UpdateProductStatusAsync(id, status);
-        await LoadProducts(currentFilter);
+        try
+        {
+            await FirebaseService.UpdateProductStatusAsync(id, status);
+            await LoadPendingProducts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating product status: {ex.Message}");
+        }
     }
 
-    private async Task DeleteProduct(string id)
+    private void ConfirmDelete(string id, string name)
     {
-        var confirmed = true; // In a real app, show a modal
-        if (confirmed)
+        confirmDeleteProductId = id;
+        deleteProductName = name;
+    }
+
+    private void CancelDelete()
+    {
+        confirmDeleteProductId = null;
+        deleteProductName = null;
+    }
+
+    private async Task ExecuteDelete()
+    {
+        if (string.IsNullOrEmpty(confirmDeleteProductId)) return;
+
+        try
         {
-            await FirebaseService.DeleteProductAsync(id);
-            await LoadProducts(AuthService.IsAdmin ? currentFilter : null);
+            await FirebaseService.DeleteProductAsync(confirmDeleteProductId);
+            confirmDeleteProductId = null;
+            deleteProductName = null;
+            await LoadSellerProducts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting product: {ex.Message}");
         }
     }
 
     private string GetStatusClass(string status) => status switch
     {
         "Approved" => "bg-green-50 text-green-700",
-        "Pending" => "bg-yellow-50 text-yellow-700",
+        "Pending" => "bg-amber-50 text-amber-700",
         "Rejected" => "bg-red-50 text-red-700",
-        _ => "bg-gray-50 text-gray-600"
+        _ => "bg-gray-50 text-gray-500"
     };
+
+    private async Task Logout()
+    {
+        await AuthService.Logout();
+        Navigation.NavigateTo("/login");
+    }
 }

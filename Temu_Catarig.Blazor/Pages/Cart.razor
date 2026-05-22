@@ -2,6 +2,7 @@
 @inject FirebaseService FirebaseService
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
 
 <PageTitle>Your Cart | Temu</PageTitle>
 
@@ -72,11 +73,11 @@
                         </div>
                         <div class="flex justify-between text-gray-600">
                             <span>Shipping</span>
-                            <span class="text-green-600 font-medium">FREE</span>
+                            <span class="text-gray-900 font-medium">₱80</span>
                         </div>
                         <div class="pt-4 border-t border-gray-100 flex justify-between text-xl font-bold text-gray-900">
                             <span>Total</span>
-                            <span class="text-temu-orange">₱@Subtotal.ToString("N0")</span>
+                            <span class="text-temu-orange">₱@((Subtotal + 80).ToString("N0"))</span>
                         </div>
                     </div>
                     
@@ -117,14 +118,64 @@
 
     private async Task LoadCart()
     {
-        cartItems = await FirebaseService.GetCartItemsAsync(AuthService.UserId!);
+        var rawCartItems = await FirebaseService.GetCartItemsAsync(AuthService.UserId!);
+        bool wasUpdatedOrRemoved = false;
+        var updatedCartItems = new List<CartItem>();
+
+        if (rawCartItems != null)
+        {
+            foreach (var item in rawCartItems)
+            {
+                var latestProduct = await FirebaseService.GetProductByIdAsync(item.ProductId);
+                if (latestProduct == null || latestProduct.Stock <= 0)
+                {
+                    await FirebaseService.RemoveFromCartAsync(AuthService.UserId!, item.ProductId);
+                    wasUpdatedOrRemoved = true;
+                }
+                else
+                {
+                    if (item.Quantity > latestProduct.Stock)
+                    {
+                        item.Quantity = latestProduct.Stock;
+                        await FirebaseService.AddToCartAsync(AuthService.UserId!, item);
+                        wasUpdatedOrRemoved = true;
+                    }
+                    updatedCartItems.Add(item);
+                }
+            }
+        }
+
+        cartItems = updatedCartItems;
+
+        if (wasUpdatedOrRemoved)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Some items in your cart were updated or removed due to stock changes.");
+        }
     }
 
     private async Task UpdateQuantity(CartItem item, int delta)
     {
-        item.Quantity += delta;
-        if (item.Quantity < 1) item.Quantity = 1;
-        if (item.Quantity > 99) item.Quantity = 99;
+        int targetQty = item.Quantity + delta;
+        if (targetQty < 1) targetQty = 1;
+
+        var latestProduct = await FirebaseService.GetProductByIdAsync(item.ProductId);
+        if (latestProduct == null || latestProduct.Stock <= 0)
+        {
+            await FirebaseService.RemoveFromCartAsync(AuthService.UserId!, item.ProductId);
+            await JsRuntime.InvokeVoidAsync("alert", "This item is no longer available.");
+            await LoadCart();
+            return;
+        }
+
+        if (targetQty > latestProduct.Stock)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Cannot add more items. Only {latestProduct.Stock} available in stock.");
+            item.Quantity = latestProduct.Stock;
+        }
+        else
+        {
+            item.Quantity = targetQty;
+        }
 
         await FirebaseService.AddToCartAsync(AuthService.UserId!, item);
         await LoadCart();

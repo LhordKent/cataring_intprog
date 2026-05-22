@@ -1,0 +1,138 @@
+@page "/admin/fulfillment"
+@inject FirebaseService FirebaseService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Order Fulfillment | Temu</PageTitle>
+
+<div class="max-w-4xl mx-auto py-8 px-4">
+    <div class="flex items-center gap-4 mb-8">
+        <button @onclick='() => Navigation.NavigateTo("/profile")' class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h1 class="text-2xl font-bold">Order Fulfillment</h1>
+    </div>
+
+    <div class="flex gap-4 mb-8">
+        <button @onclick='() => SetFilter("Pending")' 
+                class="px-6 py-2 rounded-full text-sm font-bold uppercase transition-all @(filter == "Pending" ? "bg-temu-orange text-white shadow-md shadow-temu-orange/20" : "bg-white text-gray-500 border border-gray-100")">
+            Pending
+        </button>
+        <button @onclick='() => SetFilter("Shipped")' 
+                class="px-6 py-2 rounded-full text-sm font-bold uppercase transition-all @(filter == "Shipped" ? "bg-temu-orange text-white shadow-md shadow-temu-orange/20" : "bg-white text-gray-500 border border-gray-100")">
+            Shipped
+        </button>
+        <button @onclick='() => SetFilter("Delivered")'
+                class="px-6 py-2 rounded-full text-sm font-bold uppercase transition-all @(filter == "Delivered" ? "bg-temu-orange text-white shadow-md shadow-temu-orange/20" : "bg-white text-gray-500 border border-gray-100")">
+            Delivered
+        </button>
+    </div>
+
+    @if (orders == null)
+    {
+        <div class="space-y-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="h-40 bg-gray-100 animate-pulse rounded-xl"></div>
+            }
+        </div>
+    }
+    else if (!filteredOrders.Any())
+    {
+        <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+            <p class="text-gray-500">No @filter.ToLower() orders</p>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-4">
+            @foreach (var order in filteredOrders)
+            {
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-50">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="text-sm font-mono font-bold text-gray-800">ORDER #@order.Id?.ToUpper()</p>
+                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase" style="background-color: @(order.StatusColorHex)15; color: @order.StatusColorHex;">
+                                    @order.Status
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">@order.OrderDate.ToString("MMM dd, HH:mm")</p>
+                        </div>
+                        @if (order.IsFulfillmentActionVisible)
+                        {
+                            <button @onclick="() => UpdateOrderState(order)" 
+                                    class="text-xs font-bold text-white bg-temu-orange px-4 py-2 rounded-lg hover:bg-opacity-90 transition-all uppercase shadow-sm shadow-temu-orange/20">
+                                @order.FulfillmentButtonText
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md" style="background-color: @(order.StatusColorHex)15; color: @order.StatusColorHex;">@order.Status</span>
+                        }
+                    </div>
+
+                    <div class="space-y-2 mb-4">
+                        @foreach (var item in order.Items)
+                        {
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">@item.Quantity x @item.Title</span>
+                                <span class="font-medium text-gray-900">₱@((item.Price * item.Quantity).ToString("N0"))</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="bg-slate-50 rounded-lg p-3">
+                        <div class="flex items-center gap-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-tighter">Shipping to</p>
+                        </div>
+                        <p class="text-sm text-gray-700 font-medium">@order.ReceiverName</p>
+                        <p class="text-xs text-gray-500 leading-relaxed mt-1">@order.ShippingAddress</p>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Order>? orders;
+    private string filter = "Pending";
+    private IEnumerable<Order> filteredOrders => orders?.Where(o => o.Status == filter) ?? Enumerable.Empty<Order>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsLoggedIn)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            // In a real port, we only see orders where we are the seller
+            orders = await FirebaseService.GetSellerOrdersAsync(AuthService.UserId!);
+            orders = orders.OrderByDescending(o => o.OrderDate).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading fulfillment orders: {ex.Message}");
+            orders = new List<Order>();
+        }
+    }
+
+    private void SetFilter(string f) => filter = f;
+
+    private async Task UpdateOrderState(Order order)
+    {
+        string nextStatus = order.Status == "Pending" ? "Shipped" : "Delivered";
+        await FirebaseService.UpdateOrderStatusAsync(order.Id, nextStatus);
+        await LoadOrders();
+    }
+}

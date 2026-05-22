@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using System;
+using System.Linq;
 using Temu_Catarig.Services;
 
 namespace Temu_Catarig.Pages
@@ -79,15 +80,38 @@ namespace Temu_Catarig.Pages
                 return;
             }
 
+            var latestProduct = await _firebaseService.GetProductByIdAsync(SelectedProduct.Id);
+            if (latestProduct == null)
+            {
+                await DisplayAlert("Error", "This product is no longer available.", "OK");
+                return;
+            }
+
+            if (latestProduct.Stock <= 0)
+            {
+                await DisplayAlert("Error", "This product is out of stock.", "OK");
+                return;
+            }
+
+            var cartItems = await _firebaseService.GetCartItemsAsync(AuthService.UserId!);
+            var existingCartItem = cartItems?.FirstOrDefault(item => item.ProductId == SelectedProduct.Id);
+            int currentCartQty = existingCartItem?.Quantity ?? 0;
+
+            if (currentCartQty + 1 > latestProduct.Stock)
+            {
+                await DisplayAlert("Error", $"Cannot add more items. Only {latestProduct.Stock} available in stock.", "OK");
+                return;
+            }
+
             var cartItem = new Models.CartItem
             {
-                ProductId = SelectedProduct.Id,
-                Title = SelectedProduct.Title,
-                Price = SelectedProduct.Price,
-                ImageUrl = SelectedProduct.ImageUrl,
-                Quantity = 1,
-                SellerId = SelectedProduct.SellerId,
-                SellerName = SelectedProduct.SellerName
+                ProductId = latestProduct.Id,
+                Title = latestProduct.Title,
+                Price = latestProduct.Price,
+                ImageUrl = latestProduct.ImageUrl,
+                Quantity = currentCartQty + 1,
+                SellerId = latestProduct.SellerId,
+                SellerName = latestProduct.SellerName
             };
 
             await _firebaseService.AddToCartAsync(AuthService.UserId!, cartItem);

@@ -39,8 +39,12 @@ public partial class CheckoutPage : ContentPage
         // Calculate unique sellers and total shipping
         var uniqueSellersCount = _items.Select(i => i.SellerId).Distinct().Count();
         double shippingFee = uniqueSellersCount * 80;
+        double subtotal = _items.Sum(i => i.Price * i.Quantity);
         
-        _totalAmount = _items.Sum(i => i.Price * i.Quantity) + shippingFee;
+        _totalAmount = subtotal + shippingFee;
+
+        SubtotalLabel.Text = $"₱{subtotal:N2}";
+        ShippingLabel.Text = $"₱{shippingFee:N2}";
         TotalLabel.Text = $"₱{_totalAmount:N2}";
     }
 
@@ -52,6 +56,29 @@ public partial class CheckoutPage : ContentPage
         {
             await DisplayAlert("Error", "Please fill in all details.", "OK");
             return;
+        }
+
+        if (_items != null)
+        {
+            foreach (var item in _items)
+            {
+                var latestProduct = await _firebaseService.GetProductByIdAsync(item.ProductId);
+                if (latestProduct == null)
+                {
+                    await DisplayAlert("Stock Issue", $"Product '{item.Title}' is no longer available.", "OK");
+                    return;
+                }
+                if (latestProduct.Stock <= 0)
+                {
+                    await DisplayAlert("Stock Issue", $"Product '{item.Title}' is out of stock.", "OK");
+                    return;
+                }
+                if (item.Quantity > latestProduct.Stock)
+                {
+                    await DisplayAlert("Stock Issue", $"Product '{item.Title}' does not have enough stock. Only {latestProduct.Stock} available.", "OK");
+                    return;
+                }
+            }
         }
 
         string paymentMethod = "COD";

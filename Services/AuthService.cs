@@ -81,7 +81,7 @@ public class AuthService
     {
         // Admin hardcoded login
         if (email?.Trim().ToLower() == "johnadmin@gmail.com" && password == "123123")
-        {
+        {   
             IsAdmin = true;
             UserId = "ADMIN_ID"; // Placeholder for admin
             UserToken = "ADMIN_TOKEN";

@@ -1,40 +1,55 @@
 @inject FirebaseService FirebaseService
 @inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
 
-<div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-    <div class="relative aspect-square overflow-hidden bg-gray-100">
-        <img src="@Product.ImageUrl" alt="@Product.Title" 
-             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        
-        @if (Product.Stock <= 0)
-        {
-            <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span class="bg-white text-black text-xs font-bold px-3 py-1 rounded-full uppercase">Out of Stock</span>
-            </div>
-        }
-    </div>
-
-    <div class="p-3">
-        <h3 class="text-sm text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight mb-1">@Product.Title</h3>
-        
-        <div class="flex items-center gap-1 text-temu-orange text-xs font-bold mb-2">
-            <span>@Product.RatingFormatted</span>
-            <span class="text-gray-400 font-normal">(@Product.ReviewsCount)</span>
+<div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full">
+    <div class="cursor-pointer flex-1 flex flex-col" @onclick='() => Navigation.NavigateTo($"/product/{Product.Id}")'>
+        <div class="relative aspect-square overflow-hidden bg-gray-100">
+            <img src="@Product.ImageUrl" alt="@Product.Title" 
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            
+            @if (Product.Stock <= 0)
+            {
+                <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <span class="bg-white text-black text-xs font-bold px-3 py-1 rounded-full uppercase">Out of Stock</span>
+                </div>
+            }
         </div>
 
-        <div class="flex items-center justify-between mt-auto">
-            <div class="flex flex-col">
-                <span class="text-lg font-bold text-temu-orange">@Product.PriceFormatted</span>
-                <span class="text-[10px] text-gray-500">Sold: 1k+</span>
-            </div>
+        <div class="p-3 flex-1 flex flex-col">
+            <h3 class="text-sm text-gray-800 line-clamp-2 min-h-[2.5rem] leading-tight mb-1">@Product.Title</h3>
             
-            <button @onclick="AddToCart" 
+            <div class="flex items-center gap-1 text-temu-orange text-xs font-bold mb-2">
+                <span>@Product.RatingFormatted</span>
+                <span class="text-gray-400 font-normal">(@Product.ReviewsCount)</span>
+            </div>
+
+            <div class="mt-auto">
+                <span class="text-lg font-bold text-temu-orange">@Product.PriceFormatted</span>
+            </div>
+        </div>
+    </div>
+
+    @if (AuthService.UserId != Product.SellerId)
+    {
+        <div class="p-3 pt-0">
+            <button @onclick="AddToCart" @onclick:stopPropagation="true"
                     disabled="@(Product.Stock <= 0)"
-                    class="bg-temu-orange/10 text-temu-orange hover:bg-temu-orange hover:text-white p-2 rounded-full transition-colors disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    class="w-full bg-temu-orange/10 text-temu-orange hover:bg-temu-orange hover:text-white p-2.5 rounded-full transition-all flex items-center justify-center gap-2 font-bold text-xs disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                ADD TO CART
             </button>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="p-3 pt-0">
+            <div class="w-full bg-gray-50 text-gray-400 p-2.5 rounded-full flex items-center justify-center gap-2 font-bold text-[10px] uppercase border border-dashed border-gray-200">
+                Your Product
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -44,19 +59,42 @@
     {
         if (!AuthService.IsLoggedIn)
         {
-            // Future: Show login prompt
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var latestProduct = await FirebaseService.GetProductByIdAsync(Product.Id);
+        if (latestProduct == null)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "This product is no longer available.");
+            return;
+        }
+
+        if (latestProduct.Stock <= 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "This product is out of stock.");
+            return;
+        }
+
+        var cartItems = await FirebaseService.GetCartItemsAsync(AuthService.UserId!);
+        var existingCartItem = cartItems?.FirstOrDefault(c => c.ProductId == latestProduct.Id);
+        int currentCartQty = existingCartItem?.Quantity ?? 0;
+
+        if (currentCartQty + 1 > latestProduct.Stock)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Cannot add more items. Only {latestProduct.Stock} available in stock.");
             return;
         }
 
         var cartItem = new CartItem
         {
-            ProductId = Product.Id,
-            Title = Product.Title,
-            ImageUrl = Product.ImageUrl,
-            Price = Product.Price,
-            Quantity = 1,
-            SellerId = Product.SellerId,
-            SellerName = Product.SellerName
+            ProductId = latestProduct.Id,
+            Title = latestProduct.Title,
+            ImageUrl = latestProduct.ImageUrl,
+            Price = latestProduct.Price,
+            Quantity = currentCartQty + 1,
+            SellerId = latestProduct.SellerId,
+            SellerName = latestProduct.SellerName
         };
 
         await FirebaseService.AddToCartAsync(AuthService.UserId!, cartItem);
