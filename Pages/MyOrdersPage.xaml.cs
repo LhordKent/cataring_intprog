@@ -54,11 +54,25 @@ namespace Temu_Catarig.Pages
                 string comment = await DisplayPromptAsync("Product Review", "What do you think about the product?", "Submit", "Cancel");
                 if (comment == null) return;
 
+                string buyerName = AuthService.UserDisplayName ?? "Customer";
+                try
+                {
+                    var profile = await _firebaseService.GetUserProfileAsync(AuthService.UserId!);
+                    if (profile != null && !string.IsNullOrWhiteSpace(profile.FullName))
+                    {
+                        buyerName = profile.FullName;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error retrieving user profile for review: {ex.Message}");
+                }
+
                 var review = new Review
                 {
                     ProductId = order.Items[0].ProductId,
                     BuyerId = AuthService.UserId!,
-                    BuyerName = AuthService.UserDisplayName ?? "Customer",
+                    BuyerName = buyerName,
                     Rating = rating,
                     Comment = comment,
                     Timestamp = DateTime.Now

@@ -27,9 +27,4 @@
         Route="LandingPage"
         Shell.NavBarIsVisible="False" />
 
-    <ShellContent
-        ContentTemplate="{DataTemplate pages:AdminDashboardPage}"
-        Route="AdminDashboardPage"
-        Shell.NavBarIsVisible="False" />
-
 </Shell>

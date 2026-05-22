@@ -129,9 +129,9 @@ namespace Temu_Catarig.Pages
 
                 if (_product == null)
                 {
-                    productToSave.Status = "Pending";
+                    productToSave.Status = "Approved";
                     await _firebaseService.AddProductAsync(productToSave);
-                    await DisplayAlert("Success", "Product submitted! Please wait for admin's approval.", "OK");
+                    await DisplayAlert("Success", "Product submitted successfully!", "OK");
                 }
                 else
                 {

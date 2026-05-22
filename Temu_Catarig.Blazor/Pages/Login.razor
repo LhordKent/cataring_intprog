@@ -76,14 +76,7 @@
         
         if (result.Success)
         {
-            if (AuthService.IsAdmin)
-            {
-                Navigation.NavigateTo("/admin/dashboard");
-            }
-            else
-            {
-                Navigation.NavigateTo("/");
-            }
+            Navigation.NavigateTo("/");
         }
         else
         {

@@ -28,14 +28,7 @@ namespace Temu_Catarig.Pages
             var result = await _authService.LoginUser(email, password);
             if (result.Success)
             {
-                if (AuthService.IsAdmin)
-                {
-                    await Shell.Current.GoToAsync("///AdminDashboardPage");
-                }
-                else
-                {
-                    await Shell.Current.GoToAsync("//LandingPage");
-                }
+                await Shell.Current.GoToAsync("//LandingPage");
             }
             else
             {

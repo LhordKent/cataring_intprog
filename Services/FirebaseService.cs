@@ -40,7 +40,7 @@ public class FirebaseService
 
     public async Task AddProductAsync(Product product)
     {
-        product.Status = "Pending"; // Require admin approval
+        product.Status = "Approved"; // Auto-approve all new products
         await _client
             .Child("products")
             .PostAsync(product);

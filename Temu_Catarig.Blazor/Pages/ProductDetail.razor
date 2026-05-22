@@ -49,6 +49,7 @@
             <div class="p-6 space-y-6">
                 <!-- Main Info -->
                 <div>
+                    <span class="inline-block bg-slate-100 text-slate-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider mb-3">@product.Category</span>
                     <div class="text-3xl font-extrabold text-temu-orange mb-2">₱@product.Price.ToString("N0")</div>
                     <h2 class="text-2xl font-bold text-gray-900 leading-tight mb-2">@product.Title</h2>
                     <div class="flex items-center gap-2 text-gray-400 text-sm">
@@ -57,6 +58,9 @@
                         <span class="text-gray-300">|</span>
                         <span>Stock:</span>
                         <span class="font-medium @(product.Stock > 0 ? "text-green-600" : "text-red-500")">@product.Stock</span>
+                        <span class="text-gray-300">|</span>
+                        <span>Category:</span>
+                        <span class="font-medium text-gray-700">@product.Category</span>
                     </div>
                 </div>
 

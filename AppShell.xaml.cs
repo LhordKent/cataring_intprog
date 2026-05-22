@@ -19,7 +19,7 @@ namespace Temu_Catarig
             Routing.RegisterRoute("OrderFulfillmentPage", typeof(OrderFulfillmentPage));
             Routing.RegisterRoute("ProfilePage", typeof(ProfilePage));
             Routing.RegisterRoute("CartPage", typeof(CartPage));
-            Routing.RegisterRoute("AdminDashboardPage", typeof(AdminDashboardPage));
+
             Routing.RegisterRoute("CheckoutPage", typeof(CheckoutPage));
             Routing.RegisterRoute("ManageProductsPage", typeof(ManageProductsPage));
             Routing.RegisterRoute("EditProfilePage", typeof(EditProfilePage));

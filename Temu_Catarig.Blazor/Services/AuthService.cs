@@ -14,7 +14,6 @@ public class AuthService
 
     public string? UserToken { get; private set; }
     public string? UserId { get; private set; }
-    public bool IsAdmin { get; private set; }
 
     public string? UserEmail => _authClient?.User?.Info?.Email ?? string.Empty;
     public string? UserDisplayName => _authClient?.User?.Info?.DisplayName ?? string.Empty;
@@ -60,7 +59,6 @@ public class AuthService
             
             UserId = await _localStorage.GetItemAsync<string>("userId");
             UserToken = await _localStorage.GetItemAsync<string>("userToken");
-            IsAdmin = await _localStorage.GetItemAsync<bool>("isAdmin");
             
             if (_authClient?.User != null)
             {
@@ -113,7 +111,6 @@ public class AuthService
             var userCredential = await _authClient.CreateUserWithEmailAndPasswordAsync(email, password);
             UserToken = await userCredential.User.GetIdTokenAsync();
             UserId = userCredential.User.Uid;
-            IsAdmin = false;
             
             await SaveStateToLocalStorage();
             return (true, string.Empty);
@@ -128,22 +125,12 @@ public class AuthService
     {
         try
         {
-            if (email?.Trim().ToLower() == "johnadmin@gmail.com" && password == "123123")
-            {
-                IsAdmin = true;
-                UserId = "ADMIN_ID";
-                UserToken = "ADMIN_TOKEN";
-                await SaveStateToLocalStorage();
-                return (true, string.Empty);
-            }
-
             EnsureClientInitialized();
             if (_authClient == null) return (false, "Authentication client not initialized.");
 
             var userCredential = await _authClient.SignInWithEmailAndPasswordAsync(email, password);
             UserToken = await userCredential.User.GetIdTokenAsync();
             UserId = userCredential.User.Uid;
-            IsAdmin = false;
             
             await SaveStateToLocalStorage();
             return (true, string.Empty);
@@ -174,7 +161,7 @@ public class AuthService
     {
         try
         {
-            if (!IsAdmin && _authClient?.User != null)
+            if (_authClient?.User != null)
             {
                 _authClient.SignOut();
             }
@@ -185,7 +172,6 @@ public class AuthService
         {
             UserToken = null;
             UserId = null;
-            IsAdmin = false;
             await _localStorage.ClearAsync();
         }
         catch (Exception ex)
@@ -202,7 +188,6 @@ public class AuthService
         {
             await _localStorage.SetItemAsync("userId", UserId);
             await _localStorage.SetItemAsync("userToken", UserToken);
-            await _localStorage.SetItemAsync("isAdmin", IsAdmin);
         }
         catch (Exception ex)
         {

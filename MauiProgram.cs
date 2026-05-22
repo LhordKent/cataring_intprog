@@ -32,7 +32,6 @@ namespace Temu_Catarig
             builder.Services.AddTransient<ProductDetailPage>();
             builder.Services.AddTransient<CartPage>();
             builder.Services.AddTransient<AddEditProductPage>();
-            builder.Services.AddTransient<AdminDashboardPage>();
             builder.Services.AddTransient<CheckoutPage>();
             builder.Services.AddTransient<MyOrdersPage>();
             builder.Services.AddTransient<ManageProductsPage>();

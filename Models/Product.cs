@@ -15,7 +15,7 @@ public class Product
     public int Stock { get; set; } = 10;
 
     // Status: "Pending", "Approved", "Rejected"
-    public string Status { get; set; } = "Pending";
+    public string Status { get; set; } = "Approved";
 
     // For UI display
     public string PriceFormatted => $"₱{Price:N0}";

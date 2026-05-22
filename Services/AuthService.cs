@@ -12,7 +12,6 @@ public class AuthService
 
     public static string? UserToken { get; private set; }
     public static string? UserId { get; private set; }
-    public static bool IsAdmin { get; private set; }
 
     public static async Task<string> GetFreshTokenAsync()
     {
@@ -79,21 +78,11 @@ public class AuthService
 
     public async Task<(bool Success, string ErrorMessage)> LoginUser(string email, string password)
     {
-        // Admin hardcoded login
-        if (email?.Trim().ToLower() == "johnadmin@gmail.com" && password == "123123")
-        {   
-            IsAdmin = true;
-            UserId = "ADMIN_ID"; // Placeholder for admin
-            UserToken = "ADMIN_TOKEN";
-            return (true, string.Empty);
-        }
-
         try
         {
             var userCredential = await _authClient.SignInWithEmailAndPasswordAsync(email, password);
             UserToken = await userCredential.User.GetIdTokenAsync();
             UserId = userCredential.User.Uid;
-            IsAdmin = false;
             return (true, string.Empty);
         }
         catch (Exception ex)
@@ -135,12 +124,8 @@ public class AuthService
 
     public void Logout()
     {
-        if (!IsAdmin)
-        {
-            _authClient.SignOut();
-        }
+        _authClient.SignOut();
         UserToken = null;
         UserId = null;
-        IsAdmin = false;
     }
 }
